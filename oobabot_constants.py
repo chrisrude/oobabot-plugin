@@ -1,4 +1,4 @@
-INSTRUCTIONS_MD = """
+INSTRUCTIONS_PART_1_MD = """
 # Welcome to `oobabot`
 
 **`oobabot`** is a Discord bot which can connect this AI with your Discord server.

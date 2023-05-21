@@ -41,43 +41,67 @@ class OobabotLayout:
     def set_settings_from_ui(self, settings: oobabot.settings.Settings):
         """takes the current UI elements and applies them to settings"""
 
+    def disable_all(self) -> None:
+        # loop through all elements, and for ones that are a
+        # subclass of gradio.Component, set interactive to False
+        for elem in self.__dict__.values():
+            if isinstance(elem, gr.components.IOComponent):
+                elem.interactive = False
+
+    def set_all_setting_widgets_interactive(self, interactive: bool):
+        self.character_dropdown.interactive = interactive
+        self.reload_character_button.interactive = interactive
+        self.ai_name_textbox.interactive = interactive
+        self.persona_textbox.interactive = interactive
+        self.wake_words_textbox.interactive = interactive
+        self.split_responses_radio_group.interactive = interactive
+        self.history_lines_slider.interactive = interactive
+        self.discord_behavior_checkbox_group.interactive = interactive
+
     def setup_ui(self) -> None:
         with gr.Blocks():
             with gr.Row(elem_id="oobabot-tab"):
                 with gr.Column(min_width=450, scale=1):  # settings column
-                    with gr.Accordion("", elem_id="discord_bot_token_accordion"):
+                    self.welcome_accordian = gr.Accordion(
+                        "", elem_id="discord_bot_token_accordion"
+                    )
+                    with self.welcome_accordian:
                         self._init_token_widgets()
                     gr.Markdown("### Oobabot Persona")
                     with gr.Column(scale=0):
                         self._init_persona_widgets()
                     gr.Markdown("### Discord Behavior")
                     with gr.Column():
-                        self._init_discord_behavior()
+                        self._init_discord_behavior_widgets()
 
                 with gr.Column(scale=2):  # runtime status column
                     self._init_runtime_widgets()
 
-    def _init_token_widgets(self):
+    def _init_token_widgets(self) -> None:
         gr.Markdown(
-            oobabot_constants.INSTRUCTIONS_MD, elem_classes=["oobabot_instructions"]
+            oobabot_constants.INSTRUCTIONS_PART_1_MD,
+            elem_classes=["oobabot_instructions"],
         )
         with gr.Row():
-            token_textbox = gr.Textbox(
+            self.discord_token_textbox = gr.Textbox(
                 label="Discord Token",
                 value="",
             )
-            save_button = gr.Button(value="💾", elem_id="oobabot-save-token")
+            self.discord_token_save_button = gr.Button(
+                value="💾", elem_id="oobabot-save-token"
+            )
         gr.Markdown(
             oobabot_constants.INSTRUCTIONS_PART_2_MD,
             elem_classes=["oobabot_instructions"],
         )
-        invite_url_md = gr.Markdown(
+        self.discord_invite_link_markdown = gr.Markdown(
             "**`Click here to invite your bot`** to a Discord server."
         )
-        gr.Button(value="I've Done All This", elem_id="oobabot_refresh_invite_url")
-        return (token_textbox, save_button, invite_url_md)
+        self.ive_done_all_this_button = gr.Button(
+            value="I've Done All This", elem_id="oobabot_refresh_invite_url"
+        )
 
-    def _init_persona_widgets(self):
+    def _init_persona_widgets(self) -> None:
         with gr.Row():
             self.character_dropdown = gr.Dropdown(
                 label="Character",
@@ -113,7 +137,7 @@ class OobabotLayout:
                 """,
         )
 
-    def _init_discord_behavior(self):
+    def _init_discord_behavior_widgets(self) -> None:
         self.split_responses_radio_group = gr.Radio(
             ["by sentence", "single message", "streaming [beta feature]"],
             label="Split Responses",
@@ -125,6 +149,7 @@ class OobabotLayout:
             minimum=1,
             maximum=30,
             value=7,
+            step=1,
             info="Number of lines of chat history the AI will see when generating "
             + "a response",
         )
@@ -135,7 +160,7 @@ class OobabotLayout:
             + "create a new thread for each response in a public channel.",
         )
 
-    def _init_runtime_widgets(self):
+    def _init_runtime_widgets(self) -> None:
         with gr.Row():
             self.start_button = gr.Button(value="Start Oobabot")
             self.stop_button = gr.Button(value="Stop Oobabot")

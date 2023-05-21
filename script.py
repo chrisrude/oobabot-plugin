@@ -10,6 +10,7 @@ from . import oobabot_constants, oobabot_layout, oobabot_worker
 # todo: verify that API extension is running
 # todo: automatically use loaded persona
 # todo: get oobabooga settings dir
+# todo: a way to clear the discord token
 
 params = {
     "is_tab": True,
@@ -33,6 +34,7 @@ oobabot_worker_thread = oobabot_worker.OobabotWorker(
 
 oobabot_layout = oobabot_layout.OobabotLayout()
 
+state = OobabotUIState.CLEAN
 
 ##################################
 # oobabooga <> extension interface
@@ -45,6 +47,8 @@ def ui() -> None:
     oobabot_worker_thread.reload()
     oobabot_layout.setup_ui()
 
+    enable_appropriate_widgets(OobabotUIState.STOPPING)
+
 
 def custom_css() -> str:
     """
@@ -52,5 +56,43 @@ def custom_css() -> str:
     """
     return oobabot_constants.LOG_CSS
 
-    # stop_button.click(lambda: oobabot_worker_thread.stop(), [], stop_button)
-    # start_button.click(lambda: oobabot_worker_thread.start(), [], start_button)
+
+##################################
+# behavior
+def enable_appropriate_widgets(state: OobabotUIState) -> None:
+    # start by disabling all the things
+    oobabot_layout.disable_all()
+
+    match state:
+        case OobabotUIState.CLEAN:
+            oobabot_layout.welcome_accordian.open = True
+            oobabot_layout.discord_token_textbox.interactive = True
+
+        case OobabotUIState.HAS_TOKEN:
+            oobabot_layout.welcome_accordian.open = True
+            oobabot_layout.discord_token_textbox.interactive = True
+            oobabot_layout.discord_token_save_button.interactive = True
+            oobabot_layout.discord_invite_link_markdown.interactive = True
+            # todo: set link value
+            oobabot_layout.ive_done_all_this_button.interactive = True
+            oobabot_layout.set_all_setting_widgets_interactive(True)
+
+        case OobabotUIState.STOPPED:
+            oobabot_layout.welcome_accordian.open = False
+            oobabot_layout.discord_token_save_button.interactive = True
+            oobabot_layout.ive_done_all_this_button.interactive = True
+            oobabot_layout.start_button.interactive = True
+            oobabot_layout.set_all_setting_widgets_interactive(True)
+
+        case OobabotUIState.STARTED:
+            oobabot_layout.welcome_accordian.open = False
+            oobabot_layout.discord_token_save_button.interactive = True
+            oobabot_layout.ive_done_all_this_button.interactive = True
+            oobabot_layout.stop_button.interactive = True
+            oobabot_layout.set_all_setting_widgets_interactive(False)
+
+        case OobabotUIState.STOPPING:
+            oobabot_layout.welcome_accordian.open = False
+            oobabot_layout.discord_token_save_button.interactive = True
+            oobabot_layout.ive_done_all_this_button.interactive = True
+            oobabot_layout.set_all_setting_widgets_interactive(True)
