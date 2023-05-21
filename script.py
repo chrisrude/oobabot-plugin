@@ -15,7 +15,7 @@ from . import oobabot_constants, oobabot_layout, oobabot_worker
 params = {
     "is_tab": True,
     "activate": True,
-    "config_file": "/home/rude/oobabot/config.yml",
+    "config_file": "config.yml",
 }
 
 
@@ -50,11 +50,12 @@ def ui() -> None:
     """
     Creates custom gradio elements when the UI is launched.
     """
-    oobabot_layout.setup_ui(on_ui_change, oobabot_worker.get_logs)
 
-    oobabot_layout.set_ui_from_settings(
+    oobabot_layout.setup_ui(
+        on_ui_change,
+        get_logs=oobabot_worker.get_logs,
+        bot=oobabot_worker.bot,
         settings=oobabot_worker.bot.settings,
-        fn_calc_invite_url=oobabot_worker.bot.generate_invite_url,
     )
 
     current_state = determine_current_state()
@@ -77,6 +78,23 @@ def custom_css() -> str:
     # STOPPING = 4  # user has discord token and bot persona, and bot is stopping
 
 
+def custom_js() -> str:
+    """
+    Returns custom JavaScript to be injected into the UI.
+    """
+    return """
+var done_all_this = document.getElementById("oobabot_done_all_this");
+console.log(done_all_this);
+done_all_this.addEventListener(
+    "click",
+    function() {
+        var elem = document.querySelector("#discord_bot_token_accordion > .open");
+        elem.click();
+    }
+);
+"""
+
+
 def determine_current_state() -> OobabotUIState:
     if not oobabot_worker.has_discord_token():
         return OobabotUIState.CLEAN
@@ -95,11 +113,13 @@ def enable_appropriate_widgets(state: OobabotUIState) -> None:
 
     match state:
         case OobabotUIState.CLEAN:
-            oobabot_layout.welcome_accordian.open = True
+            oobabot_layout.welcome_accordion.open = True
             oobabot_layout.discord_token_textbox.interactive = True
+            oobabot_layout.discord_token_save_button.interactive = True
 
         case OobabotUIState.HAS_TOKEN:
-            oobabot_layout.welcome_accordian.open = True
+            print("HAS_TOKEN")
+            oobabot_layout.welcome_accordion.open = True
             oobabot_layout.discord_token_textbox.interactive = True
             oobabot_layout.discord_token_save_button.interactive = True
             oobabot_layout.discord_invite_link_markdown.interactive = True
@@ -108,21 +128,24 @@ def enable_appropriate_widgets(state: OobabotUIState) -> None:
             oobabot_layout.set_all_setting_widgets_interactive(True)
 
         case OobabotUIState.STOPPED:
-            oobabot_layout.welcome_accordian.open = False
+            print("STOPPED")
+            oobabot_layout.welcome_accordion.open = False
             oobabot_layout.discord_token_save_button.interactive = True
             oobabot_layout.ive_done_all_this_button.interactive = True
             oobabot_layout.start_button.interactive = True
             oobabot_layout.set_all_setting_widgets_interactive(True)
 
         case OobabotUIState.STARTED:
-            oobabot_layout.welcome_accordian.open = False
+            print("STARTED")
+            oobabot_layout.welcome_accordion.open = False
             oobabot_layout.discord_token_save_button.interactive = True
             oobabot_layout.ive_done_all_this_button.interactive = True
             oobabot_layout.stop_button.interactive = True
             oobabot_layout.set_all_setting_widgets_interactive(False)
 
         case OobabotUIState.STOPPING:
-            oobabot_layout.welcome_accordian.open = False
+            print("STOPPING")
+            oobabot_layout.welcome_accordion.open = False
             oobabot_layout.discord_token_save_button.interactive = True
             oobabot_layout.ive_done_all_this_button.interactive = True
             oobabot_layout.set_all_setting_widgets_interactive(True)

@@ -50,6 +50,7 @@ min-width: 50px;
 font-size: 16px;
 }
 #oobabot-tab .prose h1 {
+padding-top: 10px;
 font-size: 24px;
 }
 #oobabot-tab .prose h2 {

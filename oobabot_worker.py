@@ -42,12 +42,9 @@ class OobabotWorker:
         """
         Stops the oobabot if it's running, then starts it.
         """
-        print("realoding")
         self.reload()
-        print("gonna start")
         self.thread = threading.Thread(target=self.bot.start)
         self.thread.start()
-        print("start done")
 
     def is_running(self) -> bool:
         """

@@ -1,18 +1,19 @@
-import gradio as gr
-import oobabot
-import oobabot.settings
+import typing
 
+import gradio as gr
 import modules
+
+from oobabot import oobabot
 
 from . import oobabot_constants
 
 
 class OobabotLayout:
     # discord token widgets
-    welcome_accordian: gr.Accordion
+    welcome_accordion: gr.Accordion
     discord_token_textbox: gr.Textbox
     discord_token_save_button: gr.Button
-    discord_invite_link_markdown: gr.Markdown
+    discord_invite_link_html: gr.HTML
     ive_done_all_this_button: gr.Button
 
     # persona widgets
@@ -34,35 +35,17 @@ class OobabotLayout:
     log_output_html: gr.HTML
 
     def set_ui_from_settings(
-        self, settings: oobabot.settings.Settings, fn_calc_invite_url: callable
+        self,
+        settings: oobabot.settings.Settings,
     ):
         """applies the values in settings to the UI elements"""
 
-        def make_link_markdown_from_token(
-            token: str, fn_calc_invite_url: callable
-        ) -> str:
-            if not token:
-                return "A link will appear here once you have set your Discord token."
-            link = fn_calc_invite_url(token)
-            return f"**`[Click here to invite your bot]({link})`** to a Discord server."
-
         token = settings.discord_settings.get_str("discord_token")
         self.discord_token_textbox.value = token
-        self.discord_invite_link_markdown.value = make_link_markdown_from_token(
-            token, fn_calc_invite_url
-        )
         self.character_dropdown.choices = modules.utils.get_available_characters()
         self.ai_name_textbox.value = settings.persona_settings.get_str("ai_name")
         self.persona_textbox.value = settings.persona_settings.get_str("persona")
 
-        # gr.Dropdown(
-        #     ["ran", "swam", "ate", "slept"], value=["swam", "slept"],
-        # multiselect=True,
-        # label="Activity", info="Lorem ipsum dolor sit amet, consectetur adipiscing
-        # elit.
-        # Sed auctor, nisl eget ultricies aliquam, nunc nisl aliquet nunc, eget aliquam
-        # nisl nunc vel nisl."
-        # ),
         # self.wake_words_textbox.value = ", ".join(
         #     settings.persona_settings.get_list("wakewords")
         # )
@@ -90,16 +73,25 @@ class OobabotLayout:
         self.history_lines_slider.interactive = interactive
         self.discord_behavior_checkbox_group.interactive = interactive
 
-    def setup_ui(self, on_ui_change: callable, get_logs: callable) -> None:
-        # todo: on_ui_change to use
+    def setup_ui(
+        self,
+        on_ui_change: callable,
+        get_logs: callable,
+        bot: oobabot.Oobabot,
+        settings: oobabot.settings.Settings,
+    ) -> None:
         with gr.Blocks():
             with gr.Row(elem_id="oobabot-tab"):
                 with gr.Column(min_width=450, scale=1):  # settings column
-                    self.welcome_accordian = gr.Accordion(
-                        "", elem_id="discord_bot_token_accordion"
+                    self.welcome_accordion = gr.Accordion(
+                        "Set Discord Token", elem_id="discord_bot_token_accordion"
                     )
-                    with self.welcome_accordian:
-                        self._init_token_widgets()
+                    with self.welcome_accordion:
+                        self._init_token_widgets(
+                            settings=settings,
+                            bot=bot,
+                            on_ui_change=on_ui_change,
+                        )
                     gr.Markdown("### Oobabot Persona")
                     with gr.Column(scale=0):
                         self._init_persona_widgets()
@@ -110,7 +102,13 @@ class OobabotLayout:
                 with gr.Column(scale=2):  # runtime status column
                     self._init_runtime_widgets(get_logs)
 
-    def _init_token_widgets(self) -> None:
+    def _init_token_widgets(
+        self,
+        settings: oobabot.settings.Settings,
+        bot: oobabot.Oobabot,
+        on_ui_change: callable,
+    ) -> None:
+        token = settings.discord_settings.get_str("discord_token")
         gr.Markdown(
             oobabot_constants.INSTRUCTIONS_PART_1_MD,
             elem_classes=["oobabot_instructions"],
@@ -118,7 +116,7 @@ class OobabotLayout:
         with gr.Row():
             self.discord_token_textbox = gr.Textbox(
                 label="Discord Token",
-                value="",
+                value=token,
             )
             self.discord_token_save_button = gr.Button(
                 value="💾", elem_id="oobabot-save-token"
@@ -127,19 +125,35 @@ class OobabotLayout:
             oobabot_constants.INSTRUCTIONS_PART_2_MD,
             elem_classes=["oobabot_instructions"],
         )
-        self.discord_invite_link_markdown = gr.Markdown()
+        self.discord_invite_link_html = gr.HTML(
+            value=make_link_from_token(token, bot.generate_invite_url),
+        )
         self.ive_done_all_this_button = gr.Button(
-            value="I've Done All This", elem_id="oobabot_refresh_invite_url"
+            value="I've Done All This",
+            elem_id="oobabot_done_all_this",
         )
 
-        # todo: why this broken?
-        # def close_accordian():
-        #     print("close accordian")
-        #     self.welcome_accordian.update(open=False)
+        def on_save_button(new_token: str):
+            link = ""
+            if new_token:
+                valid = bot.test_discord_token(new_token)
+                if valid:
+                    settings.discord_settings.get_setting("discord_token").set_value(
+                        new_token
+                    )
+                    link = "🟢 Your token works!<br/>" + make_link_from_token(
+                        new_token, bot.generate_invite_url
+                    )
+                else:
+                    link = "❌ The token you entered is invalid."
+            on_ui_change()
+            return link
 
-        # self.ive_done_all_this_button.click(
-        #     close_accordian, [], [self.welcome_accordian]
-        # )
+        self.discord_token_save_button.click(
+            on_save_button,
+            inputs=[self.discord_token_textbox],
+            outputs=[self.discord_invite_link_html],
+        )
 
     def _init_persona_widgets(self) -> None:
         with gr.Row():
@@ -212,3 +226,16 @@ class OobabotLayout:
                 every=0.5,
                 elem_classes=["oobabot-output"],
             )
+
+
+def make_link_from_token(
+    token: str, fn_calc_invite_url: typing.Optional[callable]
+) -> str:
+    if not token or not fn_calc_invite_url:
+        return "A link will appear here once you have set your Discord token."
+    link = fn_calc_invite_url(token)
+    print("link", link)
+    return (
+        f'<a href="{link}" target="_blank">Click here to invite your bot</a> '
+        + "to a Discord server."
+    )
