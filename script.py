@@ -118,7 +118,7 @@ authenticates your bot to Discord.
 
 ## Step 2. Enter your Bot Token
 
-**`Paste your token`** here, then **`Save`**.
+**`Paste your token`** below, then **`Save`**.
 """
 
 INSTRUCTIONS_PART_2_MD = """
@@ -135,7 +135,7 @@ def _init_token_setup():
             label="Discord Token",
             value="",
         )
-        save_button = gr.Button(value="Save Token", elem_id="oobabot_save_token")
+        save_button = gr.Button(value="💾", elem_id="oobabot-save-token")
     gr.Markdown(INSTRUCTIONS_PART_2_MD, elem_classes=["oobabot_instructions"])
     invite_url_md = gr.Markdown(
         "**`Click here to invite your bot`** to a Discord server."
@@ -145,19 +145,23 @@ def _init_token_setup():
 
 
 def _init_persona_settings(settings: oobabot.settings.Settings):
-    # with gr.Row():
-    #     character_menu = gr.Dropdown(
-    #         choices=modules.utils.get_available_characters(),
-    #         label="Character",
-    #         info="Used in chat and chat-instruct modes.",
-    #         interactive=True,
-    #     )
-    #     modules.ui.create_refresh_button(
-    #         character_menu,
-    #         lambda: None,
-    #         lambda: {"choices": modules.utils.get_available_characters()},
-    #         "refresh-button",
-    #     )
+    with gr.Row():
+        character_menu = gr.Dropdown(
+            choices=modules.utils.get_available_characters(),
+            label="Character",
+            info="Used in chat and chat-instruct modes.",
+            interactive=True,
+        )
+        refresh_character_button = gr.Button(
+            value="↻",
+            elem_id="oobabot-refresh-character-menu",
+        )
+        # modules.ui.create_refresh_button(
+        #     character_menu,
+        #     lambda: None,
+        #     lambda: {"choices": modules.utils.get_available_characters()},
+        #     "refresh-button",
+        # )
 
     gr.Textbox(
         label="AI Name",
@@ -190,9 +194,9 @@ def _init_persona_settings(settings: oobabot.settings.Settings):
 
 def _init_advanced_settings():
     gr.Radio(
-        ["by sentence", "single message", "streaming"],
+        ["by sentence", "single message", "streaming [beta feature]"],
         label="Split Responses",
-        info="How many messages is a response split into?",
+        info="How should `oobabot` split responses into messages?",
         value="by sentence",
     ),
     gr.Slider(
@@ -200,11 +204,12 @@ def _init_advanced_settings():
         minimum=1,
         maximum=30,
         value=7,
+        info="Number of lines of chat history the AI will see when generating a response",
     )
     gr.CheckboxGroup(
         ["Ignore DMs", "Reply in Thread"],
-        label="Behavior",
-        info="Where are they from?",
+        label="Behavior Adjustments",
+        info="Ignore DMs = don't reply to direct messages.  Reply in Thread = create a new thread for each response in a public channel.",
     )
 
 
@@ -215,20 +220,20 @@ def _init_oobabot_ui(settings: oobabot.settings.Settings) -> None:
     is_running = False
     with gr.Blocks():
         with gr.Row(elem_id="oobabot-tab"):
-            with gr.Column(min_width=600):  # settings column
+            with gr.Column(min_width=450, scale=1):  # settings column
                 with gr.Accordion(
                     "", open=not has_token, elem_id="discord_bot_token_accordion"
                 ):
                     # when closed, change text to "Discord Bot Token"
                     _init_token_setup()
                 gr.Markdown("### Oobabot Persona")
-                with gr.Column():
+                with gr.Column(scale=0):
                     _init_persona_settings(settings=settings)
                 gr.Markdown("### Discord Behavior")
                 with gr.Column():
                     _init_advanced_settings()
 
-            with gr.Column():  # runtime status column
+            with gr.Column(scale=2):  # runtime status column
                 with gr.Row():
                     start_button = gr.Button(
                         value="Start Oobabot",
@@ -238,7 +243,7 @@ def _init_oobabot_ui(settings: oobabot.settings.Settings) -> None:
                         value="Stop Oobabot",
                         interactive=has_token and is_running,
                     )
-                gr.Markdown("Oobabot Status")
+                gr.Markdown("### Oobabot Status", elem_id="oobabot-status-heading")
                 with gr.Row():
                     log_output = gr.HTML(
                         label="Oobabot Log",
@@ -250,11 +255,23 @@ def _init_oobabot_ui(settings: oobabot.settings.Settings) -> None:
     start_button.click(lambda: oobabot_worker_thread.start(), [], start_button)
 
 
+# 1160px
 LOG_CSS = """
 #discord_bot_token_accordion {
     padding-left: 30px;
 }
 #oobabot-tab {
+}
+#oobabot-status-heading {
+padding-top: 6px;
+}
+#oobabot-save-token {
+flex:none;
+min-width: 50px;
+}
+#oobabot-refresh-character-menu {
+flex:none;
+min-width: 50px;
 }
 #oobabot-tab .prose *{
 font-size: 16px;
@@ -272,24 +289,28 @@ font-size: 18px;
 #oobabot-tab .oobabot_instructions h1 code {
     font-size: 24px;
 }
-#oobabot-tab .oobabot_instructions #oobabot_save_token {
-    width: 50px;
-}
-#oobabot-tab .prose *.oobabot-log {
+#oobabot-tab div.oobabot-output {
     background-color: #0C0C0C;
     color: #CCCCCC;
     font-family: Consolas, Lucida Console, monospace;
+    padding:20px;
+    border-radius: var(--block-radius);
+    min-height: 1160px;
+    width: 100%;
 }
-#oobabot-tab .prose *.oobabot-log .oobabot-red {
+#oobabot-tab .prose * {
+color: unset;
+}
+#oobabot-tab .prose * .oobabot-red {
     color: #C50F1F;
 }
-#oobabot-tab .prose *.oobabot-log .oobabot-yellow {
+#oobabot-tab .prose * .oobabot-yellow {
     color: #C19C00;
 }
-#oobabot-tab .prose *.oobabot-log .oobabot-cyan {
+#oobabot-tab .prose * .oobabot-cyan {
     color: #3A96DD;
 }
-#oobabot-tab .prose *.oobabot-log .oobabot-white {
+#oobabot-tab .prose * .oobabot-white {
     color: #CCCCCC;
 }
 """
@@ -353,6 +374,61 @@ body {
 <br><span class='oobabot-yellow'>2023-05-20 17:34:35,604</span> DEBUG <span class='oobabot-cyan'>Stable Diffusion: image keywords: draw me, drawing, photo, pic, picture, image, sketch</span>
 <br><span class='oobabot-yellow'>2023-05-20 17:34:35,605</span> DEBUG <span class='oobabot-cyan'>Registering commands, sometimes this takes a while...</span>
 <br><span class='oobabot-yellow'>2023-05-20 17:34:36,075</span> INFO <span class='oobabot-white'>Registered command: lobotomize: Erase Rosie&#x27;s memory of any message before now in this channel.</span>
-<br><span class='oobabot-yellow'>2023-05-20 17:34:36,075</span> INFO <span class='oobabot-white'>Registered command: logs: Return the most recent log messages from the bot server.</span>
-<br><span class='oobabot-yellow'>2023-05-20 17:34:36,075</span> INFO <span class='oobabot-white'>Registered command: say: Force Rosie to say the provided message.</span>
+<br><span class='oobabot-yellow'>2023-05-20 17:34:36,075</span> INFO <span class='oobabot-white'>Registered command: lobotomize: Erase Rosie&#x27;s memory of any message before now in this channel.</span>
+<br><span class='oobabot-yellow'>2023-05-20 17:34:36,075</span> INFO <span class='oobabot-white'>Registered command: lobotomize: Erase Rosie&#x27;s memory of any message before now in this channel.</span>
+<br><span class='oobabot-yellow'>2023-05-20 17:34:36,075</span> INFO <span class='oobabot-white'>Registered command: lobotomize: Erase Rosie&#x27;s memory of any message before now in this channel.</span>
+<br><span class='oobabot-yellow'>2023-05-20 17:34:36,075</span> INFO <span class='oobabot-white'>Registered command: lobotomize: Erase Rosie&#x27;s memory of any message before now in this channel.</span>
+<br><span class='oobabot-yellow'>2023-05-20 17:34:36,075</span> INFO <span class='oobabot-white'>Registered command: lobotomize: Erase Rosie&#x27;s memory of any message before now in this channel.</span>
+<br><span class='oobabot-yellow'>2023-05-20 17:34:36,075</span> INFO <span class='oobabot-white'>Registered command: lobotomize: Erase Rosie&#x27;s memory of any message before now in this channel.</span>
+<br><span class='oobabot-yellow'>2023-05-20 17:34:36,075</span> INFO <span class='oobabot-white'>Registered command: lobotomize: Erase Rosie&#x27;s memory of any message before now in this channel.</span>
+<br><span class='oobabot-yellow'>2023-05-20 17:34:36,075</span> INFO <span class='oobabot-white'>Registered command: lobotomize: Erase Rosie&#x27;s memory of any message before now in this channel.</span>
+<br><span class='oobabot-yellow'>2023-05-20 17:34:36,075</span> INFO <span class='oobabot-white'>Registered command: lobotomize: Erase Rosie&#x27;s memory of any message before now in this channel.</span>
+<br><span class='oobabot-yellow'>2023-05-20 17:34:36,075</span> INFO <span class='oobabot-white'>Registered command: lobotomize: Erase Rosie&#x27;s memory of any message before now in this channel.</span>
+<br><span class='oobabot-yellow'>2023-05-20 17:34:36,075</span> INFO <span class='oobabot-white'>Registered command: lobotomize: Erase Rosie&#x27;s memory of any message before now in this channel.</span>
+<br><span class='oobabot-yellow'>2023-05-20 17:34:36,075</span> INFO <span class='oobabot-white'>Registered command: lobotomize: Erase Rosie&#x27;s memory of any message before now in this channel.</span>
+<br><span class='oobabot-yellow'>2023-05-20 17:34:36,075</span> INFO <span class='oobabot-white'>Registered command: lobotomize: Erase Rosie&#x27;s memory of any message before now in this channel.</span>
+<br><span class='oobabot-yellow'>2023-05-20 17:34:36,075</span> INFO <span class='oobabot-white'>Registered command: lobotomize: Erase Rosie&#x27;s memory of any message before now in this channel.</span>
+<br><span class='oobabot-yellow'>2023-05-20 17:34:36,075</span> INFO <span class='oobabot-white'>Registered command: lobotomize: Erase Rosie&#x27;s memory of any message before now in this channel.</span>
+<br><span class='oobabot-yellow'>2023-05-20 17:34:36,075</span> INFO <span class='oobabot-white'>Registered command: lobotomize: Erase Rosie&#x27;s memory of any message before now in this channel.</span>
+<br><span class='oobabot-yellow'>2023-05-20 17:34:36,075</span> INFO <span class='oobabot-white'>Registered command: lobotomize: Erase Rosie&#x27;s memory of any message before now in this channel.</span>
+<br><span class='oobabot-yellow'>2023-05-20 17:34:36,075</span> INFO <span class='oobabot-white'>Registered command: lobotomize: Erase Rosie&#x27;s memory of any message before now in this channel.</span>
+<br><span class='oobabot-yellow'>2023-05-20 17:34:36,075</span> INFO <span class='oobabot-white'>Registered command: lobotomize: Erase Rosie&#x27;s memory of any message before now in this channel.</span>
+<br><span class='oobabot-yellow'>2023-05-20 17:34:36,075</span> INFO <span class='oobabot-white'>Registered command: lobotomize: Erase Rosie&#x27;s memory of any message before now in this channel.</span>
+<br><span class='oobabot-yellow'>2023-05-20 17:34:36,075</span> INFO <span class='oobabot-white'>Registered command: lobotomize: Erase Rosie&#x27;s memory of any message before now in this channel.</span>
+<br><span class='oobabot-yellow'>2023-05-20 17:34:36,075</span> INFO <span class='oobabot-white'>Registered command: lobotomize: Erase Rosie&#x27;s memory of any message before now in this channel.</span>
+<br><span class='oobabot-yellow'>2023-05-20 17:34:36,075</span> INFO <span class='oobabot-white'>Registered command: lobotomize: Erase Rosie&#x27;s memory of any message before now in this channel.</span>
+<br><span class='oobabot-yellow'>2023-05-20 17:34:36,075</span> INFO <span class='oobabot-white'>Registered command: lobotomize: Erase Rosie&#x27;s memory of any message before now in this channel.</span>
+<br><span class='oobabot-yellow'>2023-05-20 17:34:36,075</span> INFO <span class='oobabot-white'>Registered command: lobotomize: Erase Rosie&#x27;s memory of any message before now in this channel.</span>
+<br><span class='oobabot-yellow'>2023-05-20 17:34:36,075</span> INFO <span class='oobabot-white'>Registered command: lobotomize: Erase Rosie&#x27;s memory of any message before now in this channel.</span>
+<br><span class='oobabot-yellow'>2023-05-20 17:34:36,075</span> INFO <span class='oobabot-white'>Registered command: lobotomize: Erase Rosie&#x27;s memory of any message before now in this channel.</span>
+<br><span class='oobabot-yellow'>2023-05-20 17:34:36,075</span> INFO <span class='oobabot-white'>Registered command: lobotomize: Erase Rosie&#x27;s memory of any message before now in this channel.</span>
+<br><span class='oobabot-yellow'>2023-05-20 17:34:36,075</span> INFO <span class='oobabot-white'>Registered command: lobotomize: Erase Rosie&#x27;s memory of any message before now in this channel.</span>
+<br><span class='oobabot-yellow'>2023-05-20 17:34:36,075</span> INFO <span class='oobabot-white'>Registered command: lobotomize: Erase Rosie&#x27;s memory of any message before now in this channel.</span>
+<br><span class='oobabot-yellow'>2023-05-20 17:34:36,075</span> INFO <span class='oobabot-white'>Registered command: lobotomize: Erase Rosie&#x27;s memory of any message before now in this channel.</span>
+<br><span class='oobabot-yellow'>2023-05-20 17:34:36,075</span> INFO <span class='oobabot-white'>Registered command: lobotomize: Erase Rosie&#x27;s memory of any message before now in this channel.</span>
+<br><span class='oobabot-yellow'>2023-05-20 17:34:36,075</span> INFO <span class='oobabot-white'>Registered command: lobotomize: Erase Rosie&#x27;s memory of any message before now in this channel.</span>
+<br><span class='oobabot-yellow'>2023-05-20 17:34:36,075</span> INFO <span class='oobabot-white'>Registered command: lobotomize: Erase Rosie&#x27;s memory of any message before now in this channel.</span>
+<br><span class='oobabot-yellow'>2023-05-20 17:34:36,075</span> INFO <span class='oobabot-white'>Registered command: lobotomize: Erase Rosie&#x27;s memory of any message before now in this channel.</span>
+<br><span class='oobabot-yellow'>2023-05-20 17:34:36,075</span> INFO <span class='oobabot-white'>Registered command: lobotomize: Erase Rosie&#x27;s memory of any message before now in this channel.</span>
+<br><span class='oobabot-yellow'>2023-05-20 17:34:36,075</span> INFO <span class='oobabot-white'>Registered command: lobotomize: Erase Rosie&#x27;s memory of any message before now in this channel.</span>
+<br><span class='oobabot-yellow'>2023-05-20 17:34:36,075</span> INFO <span class='oobabot-white'>Registered command: lobotomize: Erase Rosie&#x27;s memory of any message before now in this channel.</span>
+<br><span class='oobabot-yellow'>2023-05-20 17:34:36,075</span> INFO <span class='oobabot-white'>Registered command: lobotomize: Erase Rosie&#x27;s memory of any message before now in this channel.</span>
+<br><span class='oobabot-yellow'>2023-05-20 17:34:36,075</span> INFO <span class='oobabot-white'>Registered command: lobotomize: Erase Rosie&#x27;s memory of any message before now in this channel.</span>
+<br><span class='oobabot-yellow'>2023-05-20 17:34:36,075</span> INFO <span class='oobabot-white'>Registered command: lobotomize: Erase Rosie&#x27;s memory of any message before now in this channel.</span>
+<br><span class='oobabot-yellow'>2023-05-20 17:34:36,075</span> INFO <span class='oobabot-white'>Registered command: lobotomize: Erase Rosie&#x27;s memory of any message before now in this channel.</span>
+<br><span class='oobabot-yellow'>2023-05-20 17:34:36,075</span> INFO <span class='oobabot-white'>Registered command: lobotomize: Erase Rosie&#x27;s memory of any message before now in this channel.</span>
+<br><span class='oobabot-yellow'>2023-05-20 17:34:36,075</span> INFO <span class='oobabot-white'>Registered command: lobotomize: Erase Rosie&#x27;s memory of any message before now in this channel.</span>
+<br><span class='oobabot-yellow'>2023-05-20 17:34:36,075</span> INFO <span class='oobabot-white'>Registered command: lobotomize: Erase Rosie&#x27;s memory of any message before now in this channel.</span>
+<br><span class='oobabot-yellow'>2023-05-20 17:34:36,075</span> INFO <span class='oobabot-white'>Registered command: lobotomize: Erase Rosie&#x27;s memory of any message before now in this channel.</span>
+<br><span class='oobabot-yellow'>2023-05-20 17:34:36,075</span> INFO <span class='oobabot-white'>Registered command: lobotomize: Erase Rosie&#x27;s memory of any message before now in this channel.</span>
+<br><span class='oobabot-yellow'>2023-05-20 17:34:36,075</span> INFO <span class='oobabot-white'>Registered command: lobotomize: Erase Rosie&#x27;s memory of any message before now in this channel.</span>
+<br><span class='oobabot-yellow'>2023-05-20 17:34:36,075</span> INFO <span class='oobabot-white'>Registered command: lobotomize: Erase Rosie&#x27;s memory of any message before now in this channel.</span>
+<br><span class='oobabot-yellow'>2023-05-20 17:34:36,075</span> INFO <span class='oobabot-white'>Registered command: lobotomize: Erase Rosie&#x27;s memory of any message before now in this channel.</span>
+<br><span class='oobabot-yellow'>2023-05-20 17:34:36,075</span> INFO <span class='oobabot-white'>Registered command: lobotomize: Erase Rosie&#x27;s memory of any message before now in this channel.</span>
+<br><span class='oobabot-yellow'>2023-05-20 17:34:36,075</span> INFO <span class='oobabot-white'>Registered command: lobotomize: Erase Rosie&#x27;s memory of any message before now in this channel.</span>
+<br><span class='oobabot-yellow'>2023-05-20 17:34:36,075</span> INFO <span class='oobabot-white'>Registered command: lobotomize: Erase Rosie&#x27;s memory of any message before now in this channel.</span>
+<br><span class='oobabot-yellow'>2023-05-20 17:34:36,075</span> INFO <span class='oobabot-white'>Registered command: lobotomize: Erase Rosie&#x27;s memory of any message before now in this channel.</span>
+<br><span class='oobabot-yellow'>2023-05-20 17:34:36,075</span> INFO <span class='oobabot-white'>Registered command: lobotomize: Erase Rosie&#x27;s memory of any message before now in this channel.</span>
+<br><span class='oobabot-yellow'>2023-05-20 17:34:36,075</span> INFO <span class='oobabot-white'>Registered command: lobotomize: Erase Rosie&#x27;s memory of any message before now in this channel.</span>
+<br><span class='oobabot-yellow'>2023-05-20 17:34:36,075</span> INFO <span class='oobabot-white'>Registered command: lobotomize: Erase Rosie&#x27;s memory of any message before now in this channel.</span>
 <br><span class='oobabot-yellow'>2023-05-20 17:34:36,477</span> DEBUG <span class='oobabot-cyan'>/logs called by user &#x27;mr_bunny&#x27; in channel #1100109201071681587</span></div></body></html>"""
