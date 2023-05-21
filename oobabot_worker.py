@@ -16,25 +16,25 @@ class OobabotWorker:
         self.config_file = config_file
         self.port = port
         self.thread = None
+        self.stopping = False
         self.reload()
 
     def reload(self) -> None:
         """
         Stops the oobabot if it's running, then reloads it.
         """
-        if not self.is_running():
-            return
-
         if self.thread is not None:
+            self.stopping = True
             self.bot.stop()
             self.thread.join()
+            self.stopping = False
             self.thread = None
 
         args = [
             "--config",
             os.path.abspath(self.config_file),
             "--base-url",
-            f"http://localhost:{self.port}/",
+            f"ws://localhost:{self.port}/",
         ]
         self.bot = oobabot.Oobabot(args)
 
@@ -42,9 +42,12 @@ class OobabotWorker:
         """
         Stops the oobabot if it's running, then starts it.
         """
+        print("realoding")
         self.reload()
+        print("gonna start")
         self.thread = threading.Thread(target=self.bot.start)
         self.thread.start()
+        print("start done")
 
     def is_running(self) -> bool:
         """
@@ -53,3 +56,23 @@ class OobabotWorker:
         only that its main loop is running.
         """
         return self.thread is not None and self.thread.is_alive()
+
+    def has_discord_token(self) -> bool:
+        """
+        Returns True if the user has entered a discord token.
+        """
+        if self.bot.settings.discord_settings.get_str("discord_token"):
+            return True
+        return False
+
+    def get_logs(self) -> str:
+        """
+        Returns the logs from the oobabot.
+        """
+        if self.bot is None:
+            return ""
+
+        lines = oobabot.fancy_logger.recent_logs.get_all()
+        return (
+            '<div class="oobabot-log">' + "\n<br>".join(lines) + "</div></body></html>"
+        )

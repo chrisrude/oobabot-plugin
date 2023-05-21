@@ -2,6 +2,8 @@ import gradio as gr
 import oobabot
 import oobabot.settings
 
+import modules
+
 from . import oobabot_constants
 
 
@@ -31,12 +33,42 @@ class OobabotLayout:
     stop_button: gr.Button
     log_output_html: gr.HTML
 
-    def set_ui_from_settings(self, settings: oobabot.settings.Settings):
+    def set_ui_from_settings(
+        self, settings: oobabot.settings.Settings, fn_calc_invite_url: callable
+    ):
         """applies the values in settings to the UI elements"""
-        # token = settings.discord_settings.get_str("discord_token")
-        # has_token = token is not None and len(token) > 0
-        # has_token = False
-        # is_running = False
+
+        def make_link_markdown_from_token(
+            token: str, fn_calc_invite_url: callable
+        ) -> str:
+            if not token:
+                return "A link will appear here once you have set your Discord token."
+            link = fn_calc_invite_url(token)
+            return f"**`[Click here to invite your bot]({link})`** to a Discord server."
+
+        token = settings.discord_settings.get_str("discord_token")
+        self.discord_token_textbox.value = token
+        self.discord_invite_link_markdown.value = make_link_markdown_from_token(
+            token, fn_calc_invite_url
+        )
+        self.character_dropdown.choices = modules.utils.get_available_characters()
+        self.ai_name_textbox.value = settings.persona_settings.get_str("ai_name")
+        self.persona_textbox.value = settings.persona_settings.get_str("persona")
+
+        # gr.Dropdown(
+        #     ["ran", "swam", "ate", "slept"], value=["swam", "slept"],
+        # multiselect=True,
+        # label="Activity", info="Lorem ipsum dolor sit amet, consectetur adipiscing
+        # elit.
+        # Sed auctor, nisl eget ultricies aliquam, nunc nisl aliquet nunc, eget aliquam
+        # nisl nunc vel nisl."
+        # ),
+        # self.wake_words_textbox.value = ", ".join(
+        #     settings.persona_settings.get_list("wakewords")
+        # )
+        # split_responses_radio_group: gr.Radio
+        self.history_lines_slider.value = settings.discord_settings.get("history_lines")
+        # discord_behavior_checkbox_group: gr.CheckboxGroup
 
     def set_settings_from_ui(self, settings: oobabot.settings.Settings):
         """takes the current UI elements and applies them to settings"""
@@ -58,7 +90,8 @@ class OobabotLayout:
         self.history_lines_slider.interactive = interactive
         self.discord_behavior_checkbox_group.interactive = interactive
 
-    def setup_ui(self) -> None:
+    def setup_ui(self, on_ui_change: callable, get_logs: callable) -> None:
+        # todo: on_ui_change to use
         with gr.Blocks():
             with gr.Row(elem_id="oobabot-tab"):
                 with gr.Column(min_width=450, scale=1):  # settings column
@@ -75,7 +108,7 @@ class OobabotLayout:
                         self._init_discord_behavior_widgets()
 
                 with gr.Column(scale=2):  # runtime status column
-                    self._init_runtime_widgets()
+                    self._init_runtime_widgets(get_logs)
 
     def _init_token_widgets(self) -> None:
         gr.Markdown(
@@ -94,12 +127,19 @@ class OobabotLayout:
             oobabot_constants.INSTRUCTIONS_PART_2_MD,
             elem_classes=["oobabot_instructions"],
         )
-        self.discord_invite_link_markdown = gr.Markdown(
-            "**`Click here to invite your bot`** to a Discord server."
-        )
+        self.discord_invite_link_markdown = gr.Markdown()
         self.ive_done_all_this_button = gr.Button(
             value="I've Done All This", elem_id="oobabot_refresh_invite_url"
         )
+
+        # todo: why this broken?
+        # def close_accordian():
+        #     print("close accordian")
+        #     self.welcome_accordian.update(open=False)
+
+        # self.ive_done_all_this_button.click(
+        #     close_accordian, [], [self.welcome_accordian]
+        # )
 
     def _init_persona_widgets(self) -> None:
         with gr.Row():
@@ -160,7 +200,7 @@ class OobabotLayout:
             + "create a new thread for each response in a public channel.",
         )
 
-    def _init_runtime_widgets(self) -> None:
+    def _init_runtime_widgets(self, get_logs: callable) -> None:
         with gr.Row():
             self.start_button = gr.Button(value="Start Oobabot")
             self.stop_button = gr.Button(value="Stop Oobabot")
@@ -168,6 +208,7 @@ class OobabotLayout:
         with gr.Row():
             self.log_output_html = gr.HTML(
                 label="Oobabot Log",
-                value="",
+                value=get_logs,
+                every=0.5,
                 elem_classes=["oobabot-output"],
             )
