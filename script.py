@@ -5,9 +5,9 @@ import os
 import threading
 
 import gradio as gr
-from oobabot import oobabot
-
 import modules
+
+from oobabot import oobabot
 
 params = {
     "is_tab": True,
@@ -97,35 +97,51 @@ def custom_css() -> str:
 
 
 INSTRUCTIONS_MD = """
-# Oobabot
+# Welcome to `oobabot`
+
+**`oobabot`** is a Discord bot which can connect this AI with your Discord server.
+
+## Step 1. Create a Bot Account
+
+First, you'll need to generate a Discord bot token.  This is a secret key that
+authenticates your bot to Discord.
+
+1. Log in to [Discord's Developer Portal](https://discord.com/developers/applications)
+1. Choose **`New Application`**
+1. Give your bot a name.  This name will be visible to users.
+1. Choose **`Bot`** from the left-hand menu.
+1. Under **`Privileged Gateway Intents`** enable:
+    - **`SERVER MEMBERS INTENT: ON`**
+    - **`MESSAGE CONTENT INTENT: ON`**
+1. Hit "Save Changes".
+1. Hit **`Reset Token`** and copy the token
+
+## Step 2. Enter your Bot Token
+
+**`Paste your token`** here, then **`Save`**.
+"""
+
+INSTRUCTIONS_PART_2_MD = """
+
+## Step 3. Invite your Bot
+
 """
 
 
 def _init_token_setup():
-    # steps
-    # on https://discord.com/developers/applications
-    #  New Application
-    #    enter name and "Create"
-    #
-    # Bot
-    #  turn off "public bot", probably
-    # turn on
-    #   "Server Members" and "Message Content" intent
-    #   "Presence Intent" should be off
-    # hit "reset token" > copy token
-    # paste token here: MTEwOTY3MTk4NzE0MTQzMTM4OA.G9xxVq.QYonUEnssluf5MxYhqrDVlwoDAZaoPshpVIVhQ
-    #
-    # first part seems to be base64 encoded client ID
-    # client ID 1109671987141431388
-    # permissions hash  309237745664
-    # https://discord.com/api/oauth2/authorize?client_id={client_id}&permissions={permissions}}&scope=bot
-    gr.Markdown(INSTRUCTIONS_MD)
+    gr.Markdown(INSTRUCTIONS_MD, elem_classes=["oobabot_instructions"])
     with gr.Row():
-        gr.Textbox(
+        token_textbox = gr.Textbox(
             label="Discord Token",
             value="",
         )
-        gr.Button(label="Test Token")
+        save_button = gr.Button(value="Save Token", elem_id="oobabot_save_token")
+    gr.Markdown(INSTRUCTIONS_PART_2_MD, elem_classes=["oobabot_instructions"])
+    invite_url_md = gr.Markdown(
+        "**`Click here to invite your bot`** to a Discord server."
+    )
+    gr.Button(value="I've Done All This", elem_id="oobabot_refresh_invite_url")
+    return (token_textbox, save_button, invite_url_md)
 
 
 def _init_persona_settings(settings: oobabot.settings.Settings):
@@ -159,7 +175,7 @@ def _init_persona_settings(settings: oobabot.settings.Settings):
         lines=12,
     )
     gr.Textbox(
-        label="Wakewords",
+        label="Wake Words",
         value=", ".join(settings.persona_settings.get_list("wakewords")),
         info="""
             One or more words that the bot will listen for.
@@ -167,7 +183,7 @@ def _init_persona_settings(settings: oobabot.settings.Settings):
             access for one of these words to be mentioned, then reply
             to any messages it sees with a matching word.
             The bot will always reply to @-mentions and
-            direct messages, even if no wakewords are supplied.
+            direct messages, even if no wake words are supplied.
             """,
     )
 
@@ -192,70 +208,90 @@ def _init_advanced_settings():
     )
 
 
-def _init_status():
-    gr.Label(label="Status", value="🔴 Not Running")
-    gr.Label(
-        label="Messages",
-        value="34 sent",
-        info="Average time to first response in seconds",
-    )
-    gr.Label(label="Generation Speed", info="Token Generation Speed in tokens/second")
-
-
 def _init_oobabot_ui(settings: oobabot.settings.Settings) -> None:
     token = settings.discord_settings.get_str("discord_token")
     has_token = token is not None and len(token) > 0
-    has_token = True
+    has_token = False
+    is_running = False
     with gr.Blocks():
-        with gr.Accordion("Welcome! - Bot Token", open=not has_token):
-            _init_token_setup()
-        with gr.Row():
-            with gr.Column():
-                _init_persona_settings(settings=settings)
-                with gr.Accordion("Advanced", open=False):
+        with gr.Row(elem_id="oobabot-tab"):
+            with gr.Column(min_width=600):  # settings column
+                with gr.Accordion(
+                    "", open=not has_token, elem_id="discord_bot_token_accordion"
+                ):
+                    # when closed, change text to "Discord Bot Token"
+                    _init_token_setup()
+                gr.Markdown("### Oobabot Persona")
+                with gr.Column():
+                    _init_persona_settings(settings=settings)
+                gr.Markdown("### Discord Behavior")
+                with gr.Column():
                     _init_advanced_settings()
-            with gr.Column():
-                with gr.Row():
-                    _init_status()
-                with gr.Row():
-                    start = gr.Button(value="Start Oobabot", interactive=True)
-                    start.click(lambda: oobabot_worker_thread.start(), [], start)
 
-                    stop = gr.Button(
-                        value="Stop Oobabot", interactive=False
-                    )  # , interactive=False
-                    stop.click(lambda: oobabot_worker_thread.stop(), [], stop)
-
+            with gr.Column():  # runtime status column
                 with gr.Row():
-                    gr.HTML(
-                        label="Oobabot Log", value=SAMPLE_HTML, elem_id="oobabot-log"
+                    start_button = gr.Button(
+                        value="Start Oobabot",
+                        interactive=has_token and not is_running,
                     )
+                    stop_button = gr.Button(
+                        value="Stop Oobabot",
+                        interactive=has_token and is_running,
+                    )
+                gr.Markdown("Oobabot Status")
+                with gr.Row():
+                    log_output = gr.HTML(
+                        label="Oobabot Log",
+                        value=SAMPLE_HTML,
+                        elem_classes=["oobabot-output"],
+                    )
+
+    stop_button.click(lambda: oobabot_worker_thread.stop(), [], stop_button)
+    start_button.click(lambda: oobabot_worker_thread.start(), [], start_button)
 
 
 LOG_CSS = """
-<style>
-#oobabot-log div.oobabot-log {
+#discord_bot_token_accordion {
+    padding-left: 30px;
+}
+#oobabot-tab {
+}
+#oobabot-tab .prose *{
+font-size: 16px;
+}
+#oobabot-tab .prose h1 {
+font-size: 24px;
+}
+#oobabot-tab .prose h2 {
+padding-top: 20px;
+font-size: 18px;
+}
+#oobabot-tab .oobabot_instructions code {
+    font-size: 18px;
+}
+#oobabot-tab .oobabot_instructions h1 code {
+    font-size: 24px;
+}
+#oobabot-tab .oobabot_instructions #oobabot_save_token {
+    width: 50px;
+}
+#oobabot-tab .prose *.oobabot-log {
     background-color: #0C0C0C;
     color: #CCCCCC;
     font-family: Consolas, Lucida Console, monospace;
 }
-.oobabot-log .oobabot-red {
+#oobabot-tab .prose *.oobabot-log .oobabot-red {
     color: #C50F1F;
-    font-family: Consolas, Lucida Console, monospace;
 }
-.oobabot-log .oobabot-yellow {
+#oobabot-tab .prose *.oobabot-log .oobabot-yellow {
     color: #C19C00;
-    font-family: Consolas, Lucida Console, monospace;
 }
-.oobabot-log .oobabot-cyan {
+#oobabot-tab .prose *.oobabot-log .oobabot-cyan {
     color: #3A96DD;
-    font-family: Consolas, Lucida Console, monospace;
 }
-.oobabot-log .oobabot-white {
+#oobabot-tab .prose *.oobabot-log .oobabot-white {
     color: #CCCCCC;
-    font-family: Consolas, Lucida Console, monospace;
 }
-</style>
 """
 
 SAMPLE_HTML = """
