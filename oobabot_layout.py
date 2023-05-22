@@ -1,11 +1,16 @@
 import gradio as gr
 
-from oobabot import oobabot
-
 from . import oobabot_constants
 
 
 class OobabotLayout:
+    """
+    This class is responsible for creating the oobabot UI frame.
+
+    It should create all of the UI components, but not set any
+    behaviors or values.
+    """
+
     # discord token widgets
     welcome_accordion: gr.Accordion
     discord_token_textbox: gr.Textbox
@@ -34,8 +39,6 @@ class OobabotLayout:
     def setup_ui(
         self,
         get_logs: callable,
-        bot: oobabot.Oobabot,
-        settings: oobabot.settings.Settings,
     ) -> None:
         with gr.Blocks():
             with gr.Row(elem_id="oobabot-tab"):
@@ -44,10 +47,7 @@ class OobabotLayout:
                         "Set Discord Token", elem_id="discord_bot_token_accordion"
                     )
                     with self.welcome_accordion:
-                        self._init_token_widgets(
-                            settings=settings,
-                            bot=bot,
-                        )
+                        self._init_token_widgets()
                     gr.Markdown("### Oobabot Persona")
                     with gr.Column(scale=0):
                         self._init_persona_widgets()
@@ -60,10 +60,7 @@ class OobabotLayout:
 
     def _init_token_widgets(
         self,
-        settings: oobabot.settings.Settings,
-        bot: oobabot.Oobabot,
     ) -> None:
-        token = settings.discord_settings.get_str("discord_token")
         gr.Markdown(
             oobabot_constants.INSTRUCTIONS_PART_1_MD,
             elem_classes=["oobabot_instructions"],
@@ -71,7 +68,9 @@ class OobabotLayout:
         with gr.Row():
             self.discord_token_textbox = gr.Textbox(
                 label="Discord Token",
-                value=token,
+                show_label=False,
+                placeholder="Paste your Discord bot token here.",
+                value=" ",  # this is terrible
             )
             self.discord_token_save_button = gr.Button(
                 value="💾", elem_id="oobabot-save-token"

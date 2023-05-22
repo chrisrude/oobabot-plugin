@@ -42,6 +42,11 @@ padding-top: 6px;
 flex:none;
 min-width: 50px;
 }
+#oobabot-tab .prose #oobabot-invite-link pre {
+    display:inline;
+    color: orange;
+    text-decoration: underline;
+}
 #oobabot-refresh-character-menu {
 flex:none;
 min-width: 50px;
