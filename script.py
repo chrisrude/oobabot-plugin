@@ -1,12 +1,12 @@
-import enum
 import importlib
 import logging
 import types
 import typing
 
-import modules
-
+import gradio as gr
 import oobabot
+
+import modules
 
 from . import oobabot_constants, oobabot_layout, oobabot_worker
 
@@ -15,8 +15,7 @@ from . import oobabot_constants, oobabot_layout, oobabot_worker
 #
 # todo: verify that API extension is running
 # todo: automatically use loaded persona
-# todo: get Oobabooga settings dir
-# todo: a way to clear the discord token
+# todo: get Oobabooga settings dir?
 
 params = {
     "is_tab": True,
@@ -24,7 +23,7 @@ params = {
     "config_file": "oobabot-config.yml",
 }
 
-
+##################################
 # so, logging_colors.py, rather than using the logging module's built-in
 # formatter, is monkey-patching the logging module's StreamHandler.emit.
 # This is a problem for us, because we also use the logging module, but
@@ -55,81 +54,13 @@ for handler in ooba_logger.handlers:
 
 logging.StreamHandler.emit = hacked_emit
 
-
-class OobabotUIState(enum.Enum):
-    CLEAN = 0  # user has no discord token
-    HAS_TOKEN = 1  # user has discord token, but no bot persona
-    STOPPED = 2  # user has discord token and bot persona, but bot is stopped
-    STARTED = 3  # user has discord token and bot persona, and bot is started
-    STOPPING = 4  # user has discord token and bot persona, and bot is stopping
-
+##################################
 
 oobabot_worker = oobabot_worker.OobabotWorker(
     modules.shared.args.api_streaming_port,
     params["config_file"],
 )
-
 oobabot_layout = oobabot_layout.OobabotLayout()
-
-state = OobabotUIState.CLEAN
-
-
-##################################
-# behavior
-
-
-def determine_current_state() -> OobabotUIState:
-    if not oobabot_worker.has_discord_token():
-        return OobabotUIState.CLEAN
-    if oobabot_worker.is_running():
-        return OobabotUIState.STARTED
-    if oobabot_worker.stopping:
-        return OobabotUIState.STOPPING
-    return OobabotUIState.STOPPED
-
-
-# def enable_appropriate_widgets(state: OobabotUIState) -> None:
-#     # start by disabling all the things
-#     oobabot_layout.disable_all()
-
-#     match state:
-#         case OobabotUIState.CLEAN:
-#             oobabot_layout.welcome_accordion.open = True
-#             oobabot_layout.discord_token_textbox.interactive = True
-#             oobabot_layout.discord_token_save_button.interactive = True
-
-#         case OobabotUIState.HAS_TOKEN:
-#             print("HAS_TOKEN")
-#             oobabot_layout.welcome_accordion.open = True
-#             oobabot_layout.discord_token_textbox.interactive = True
-#             oobabot_layout.discord_token_save_button.interactive = True
-#             oobabot_layout.discord_invite_link_markdown.interactive = True
-#             # todo: set link value
-#             oobabot_layout.ive_done_all_this_button.interactive = True
-#             oobabot_layout.set_all_setting_widgets_interactive(True)
-
-#         case OobabotUIState.STOPPED:
-#             print("STOPPED")
-#             oobabot_layout.welcome_accordion.open = False
-#             oobabot_layout.discord_token_save_button.interactive = True
-#             oobabot_layout.ive_done_all_this_button.interactive = True
-#             oobabot_layout.start_button.interactive = True
-#             oobabot_layout.set_all_setting_widgets_interactive(True)
-
-#         case OobabotUIState.STARTED:
-#             print("STARTED")
-#             oobabot_layout.welcome_accordion.open = False
-#             oobabot_layout.discord_token_save_button.interactive = True
-#             oobabot_layout.ive_done_all_this_button.interactive = True
-#             oobabot_layout.stop_button.interactive = True
-#             oobabot_layout.set_all_setting_widgets_interactive(False)
-
-#         case OobabotUIState.STOPPING:
-#             print("STOPPING")
-#             oobabot_layout.welcome_accordion.open = False
-#             oobabot_layout.discord_token_save_button.interactive = True
-#             oobabot_layout.ive_done_all_this_button.interactive = True
-#             oobabot_layout.set_all_setting_widgets_interactive(True)
 
 ##################################
 # discord token UI
@@ -211,15 +142,15 @@ def connect_token_actions() -> None:
     )
 
 
-def do_get_chars(token_is_plausible: bool = True):
+def do_get_chars():
     return oobabot_layout.character_dropdown.update(
         choices=modules.utils.get_available_characters(),
-        interactive=token_is_plausible,
+        interactive=True,
         # value=characters[0],???
     )
 
 
-def connect_character_actions(token_is_plausible: bool) -> None:
+def connect_character_actions() -> None:
     oobabot_layout.character_dropdown.attach_load_event(
         do_get_chars,
         None,
@@ -240,46 +171,70 @@ def ui() -> None:
     Creates custom gradio elements when the UI is launched.
     """
     token = oobabot_worker.bot.settings.discord_settings.get_str("discord_token")
+    plausible_token = token_is_plausible(token)
+
     oobabot_layout.setup_ui(
         get_logs=oobabot_worker.get_logs,
-        has_plausible_token=token_is_plausible(token),
+        has_plausible_token=plausible_token,
     )
 
-    # current_state = determine_current_state()
-    # enable_appropriate_widgets(current_state)
-
     connect_token_actions()
-    connect_character_actions(token_is_plausible(token))
+    connect_character_actions()
     # todo: connect other actions
 
-    # set token widget, it should cascade to other widgets
+    set_values_from_token(token, plausible_token)
+    set_values_from_settings(oobabot_worker.bot.settings)
+
+
+def set_values_from_token(token: str, plausible_token: bool) -> None:
+    def enable_when_token_plausible(component: gr.components.IOComponent) -> None:
+        component.attach_load_event(
+            lambda: component.update(interactive=plausible_token),
+            None,
+        )
+
+    # set token widget value, it will cascade interactive-enabling events
+    # to other UI components
     oobabot_layout.discord_token_textbox.attach_load_event(
         lambda: oobabot_layout.discord_token_textbox.update(value=token),
         None,
     )
-    oobabot_layout.discord_token_save_button.attach_load_event(
-        lambda: oobabot_layout.discord_token_save_button.update(
-            interactive=token_is_plausible(token)
-        ),
-        None,
-    )
+    enable_when_token_plausible(oobabot_layout.discord_token_save_button)
     oobabot_layout.discord_invite_link_html.attach_load_event(
         lambda: oobabot_layout.discord_invite_link_html.update(
             # pretend that the token is valid here if it's plausible
             value=update_discord_invite_link(
                 token,
-                token_is_plausible(token),
+                token_is_plausible,
                 False,
             )
         ),
         None,
     )
-    oobabot_layout.ive_done_all_this_button.attach_load_event(
-        lambda: oobabot_layout.ive_done_all_this_button.update(
-            interactive=token_is_plausible(token)
+    enable_when_token_plausible(oobabot_layout.ive_done_all_this_button)
+    enable_when_token_plausible(oobabot_layout.start_button)
+
+
+def set_values_from_settings(settings: oobabot.settings.Settings):
+    oobabot_layout.ai_name_textbox.attach_load_event(
+        lambda: oobabot_layout.ai_name_textbox.update(
+            value=settings.persona_settings.get_str("ai_name")
         ),
         None,
     )
+    oobabot_layout.persona_textbox.attach_load_event(
+        lambda: oobabot_layout.persona_textbox.update(
+            value=settings.persona_settings.get_str("persona")
+        ),
+        None,
+    )
+    # todo: wake words
+    # wake_words_textbox: gr.Textbox
+
+    # discord behavior widgets
+    split_responses_radio_group: gr.Radio
+    history_lines_slider: gr.Slider
+    discord_behavior_checkbox_group: gr.CheckboxGroup
 
 
 def custom_css() -> str:

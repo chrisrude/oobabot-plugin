@@ -102,6 +102,7 @@ class OobabotLayout:
         self.ai_name_textbox = gr.Textbox(
             label="AI Name",
             info="Name the AI will use to refer to itself",
+            interactive=True,
         )
         self.persona_textbox = gr.Textbox(
             label="Persona",
@@ -110,6 +111,7 @@ class OobabotLayout:
             request.  This is useful for setting up a 'character' for the
             bot to play.
             """,
+            interactive=True,
             lines=12,
         )
         self.wake_words_textbox = gr.Textbox(
@@ -122,6 +124,7 @@ class OobabotLayout:
                 The bot will always reply to @-mentions and
                 direct messages, even if no wake words are supplied.
                 """,
+            interactive=True,
         )
 
     def _init_discord_behavior_widgets(self) -> None:
@@ -130,6 +133,7 @@ class OobabotLayout:
             label="Split Responses",
             info="How should `oobabot` split responses into messages?",
             value="by sentence",
+            interactive=True,
         )
         self.history_lines_slider = gr.Slider(
             label="History Lines",
@@ -139,18 +143,26 @@ class OobabotLayout:
             step=1,
             info="Number of lines of chat history the AI will see when generating "
             + "a response",
+            interactive=True,
         )
         self.discord_behavior_checkbox_group = gr.CheckboxGroup(
             ["Ignore DMs", "Reply in Thread"],
             label="Behavior Adjustments",
-            info="Ignore DMs = don't reply to direct messages.  Reply in Thread = "
+            info="Ignore DMs = don't reply to direct messages.\nReply in Thread = "
             + "create a new thread for each response in a public channel.",
+            interactive=True,
         )
 
     def _init_runtime_widgets(self, get_logs: callable) -> None:
         with gr.Row():
-            self.start_button = gr.Button(value="Start Oobabot")
-            self.stop_button = gr.Button(value="Stop Oobabot")
+            self.start_button = gr.Button(
+                value="Start Oobabot",
+                interactive=False,
+            )
+            self.stop_button = gr.Button(
+                value="Stop Oobabot",
+                interactive=False,
+            )
         gr.Markdown("### Oobabot Status", elem_id="oobabot-status-heading")
         with gr.Row():
             self.log_output_html = gr.HTML(
