@@ -4,9 +4,9 @@ import types
 import typing
 
 import gradio as gr
-import oobabot
-
 import modules
+
+import oobabot
 
 from . import oobabot_constants, oobabot_input_handlers, oobabot_layout, oobabot_worker
 
@@ -196,18 +196,18 @@ def init_button_handlers(
         ],
     )
 
-    # TODO_ ENABLE
-    # TODO_ ENABLE
-    # TODO_ ENABLE
-    # TODO_ ENABLE
-    # TODO_ ENABLE
-    # TODO_ ENABLE
-    # TODO_ ENABLE
-    # oobabot_layout.reload_character_button.click(
-    #     input_handlers[oobabot_layout.character_dropdown].update_component_from_event,
-    #     inputs=[],
-    #     outputs=[oobabot_layout.character_dropdown],
-    # )
+    def update_available_characters():
+        choices = modules.utils.get_available_characters()
+        oobabot_layout.character_dropdown.update(
+            choices=choices,
+            interactive=True,
+        )
+
+    oobabot_layout.reload_character_button.click(
+        update_available_characters,
+        inputs=[],
+        outputs=[oobabot_layout.character_dropdown],
+    )
 
 
 ##################################
@@ -238,7 +238,10 @@ def ui() -> None:
     for component_to_setting in input_handlers.values():
         component_to_setting.init_component_from_setting()
 
+    # sets up what happens when each button is pressed
     init_button_handlers(input_handlers)
+
+    # enables or disables buttons based on the state of other inputs
     init_button_enablers(token, plausible_token)
 
 
@@ -247,12 +250,6 @@ def custom_css() -> str:
     Returns custom CSS to be injected into the UI.
     """
     return oobabot_constants.LOG_CSS
-
-    # CLEAN = 0  # user has no discord token
-    # HAS_TOKEN = 1  # user has discord token, but no bot persona
-    # STOPPED = 2  # user has discord token and bot persona, but bot is stopped
-    # STARTED = 3  # user has discord token and bot persona, and bot is started
-    # STOPPING = 4  # user has discord token and bot persona, and bot is stopping
 
 
 def custom_js() -> str:

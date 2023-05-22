@@ -131,6 +131,9 @@ class OobabotLayout:
     SINGLE_MESSAGE = "single message"
     STREAMING = "streaming [beta feature]"
 
+    IGNORE_DMS = "Ignore DMs"
+    REPLY_IN_THREAD = "Reply in Thread"
+
     def _init_discord_behavior_widgets(self) -> None:
         self.split_responses_radio_group = gr.Radio(
             [self.BY_SENTENCE, self.SINGLE_MESSAGE, self.STREAMING],
@@ -149,11 +152,15 @@ class OobabotLayout:
             + "a response",
             interactive=True,
         )
+
         self.discord_behavior_checkbox_group = gr.CheckboxGroup(
-            ["Ignore DMs", "Reply in Thread"],
+            [self.IGNORE_DMS, self.REPLY_IN_THREAD],
             label="Behavior Adjustments",
-            info="Ignore DMs = don't reply to direct messages.\nReply in Thread = "
-            + "create a new thread for each response in a public channel.",
+            info=(
+                f"{self.IGNORE_DMS} = don't reply to direct messages.  "
+                + f"{self.REPLY_IN_THREAD} = create a new thread for each response "
+                + "in a public channel."
+            ),
             interactive=True,
         )
 

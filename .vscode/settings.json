@@ -3,6 +3,7 @@
         "gradio",
         "ooba",
         "Oobabooga",
-        "oobabot"
+        "oobabot",
+        "Wakewords"
     ]
 }

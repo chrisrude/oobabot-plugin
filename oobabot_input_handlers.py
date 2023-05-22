@@ -1,12 +1,13 @@
 import abc
+import pathlib
 import typing
 
 import gradio as gr
+import modules
+
 import oobabot
 import oobabot.overengineered_settings_parser
 import oobabot.settings
-
-import modules
 
 from . import oobabot_layout
 
@@ -74,19 +75,52 @@ class SimpleComponentToSetting(ComponentToSetting):
 
 
 class CharacterComponentToSetting(SimpleComponentToSetting):
-    def write_to_settings(self, new_value: typing.List[str]) -> None:
-        # todo: map name to file path
-        super().write_to_settings("")
+    FOLDER = "characters"
 
-    def read_from_settings(self) -> typing.List[str]:
-        # todo: map file path to name
-        # add in the choices element, which is the list of available characters
-        # to choose from
-        return super().read_from_settings()
+    def _character_name_to_filepath(self, character: str) -> str:
+        # this is how it's done in chat.py... there's no method to
+        # call, so just do the same thing here
+        filename = ""
+        for extension in ["yml", "yaml", "json"]:
+            filepath = pathlib.Path(f"{self.FOLDER}/{character}.{extension}")
+            if filepath.exists():
+                filename = filepath.resolve()
+        return filename
+
+    def write_to_settings(self, character_name: str) -> None:
+        filename = self._character_name_to_filepath(character_name)
+        super().write_to_settings(filename)
+
+    def read_from_settings(self) -> str:
+        # turning the path back into the character name just means
+        # removing the folder and extension... but case may have been
+        # lost, so we'll need to match it against the list of available
+        # options.
+        # also, the file may no longer exist, in that case we'll just
+        # return the empty string
+        filename = super().read_from_settings()
+        if not filename:
+            return ""
+        path = pathlib.Path(filename)
+        if not path.exists():
+            return ""
+        characters = modules.utils.get_available_characters()
+        for character in characters:
+            if character.lower() == path.stem.lower():
+                return character
+        return ""
+
+    def update_component_from_event(self, new_value: str) -> dict:
+        self.write_to_settings(new_value)
+        result = self.component.update(
+            value=self.read_from_settings(),
+            choices=modules.utils.get_available_characters(),
+        )
+        return result
 
     def init_component_from_setting(self):
         def init_component():
-            self.component.update(
+            return self.component.update(
                 value=self.read_from_settings(),
                 interactive=True,
                 choices=modules.utils.get_available_characters(),
@@ -104,12 +138,8 @@ class WakewordsComponentToSetting(SimpleComponentToSetting):
         self.settings_group.set(self.setting_name, words)
 
     def read_from_settings(self) -> str:
-        print(f"reading from settings {self.setting_name}")
         wake_words = self.settings_group.get_list(self.setting_name)
-        print(f"got wake words {wake_words}")
-        s = ", ".join(wake_words)
-        print(f"returning {s}")
-        return s
+        return ", ".join(wake_words)
 
 
 class ResponseRadioComponentToSetting(ComponentToSetting):
@@ -158,6 +188,35 @@ class ResponseRadioComponentToSetting(ComponentToSetting):
         )
 
 
+class BehaviorCheckboxGroupToSetting(ComponentToSetting):
+    def __init__(
+        self,
+        component: gr.components.IOComponent,
+        settings_group: oobabot.overengineered_settings_parser.ConfigSettingGroup,
+    ):
+        super().__init__(component)
+        self.settings_group = settings_group
+
+    OPTIONS = [
+        ("ignore_dms", oobabot_layout.OobabotLayout.IGNORE_DMS),
+        ("reply_in_thread", oobabot_layout.OobabotLayout.REPLY_IN_THREAD),
+    ]
+
+    def write_to_settings(self, new_values: typing.List[str]) -> None:
+        # we'll get a list of strings reflecting the values of the
+        # checked boxes in the group
+        for option_setting, option_ui_string in self.OPTIONS:
+            value = option_ui_string in new_values
+            self.settings_group.set(option_setting, value)
+
+    def read_from_settings(self) -> typing.List[str]:
+        options_on = []
+        for option_setting, option_ui_string in self.OPTIONS:
+            if self.settings_group.get(option_setting):
+                options_on.append(option_ui_string)
+        return options_on
+
+
 def get_all(
     oobabot_layout: oobabot_layout.OobabotLayout,
     settings: oobabot.settings.Settings,
@@ -168,11 +227,11 @@ def get_all(
             settings.discord_settings,
             "discord_token",
         ),
-        # CharacterComponentToSetting(
-        #     oobabot_layout.character_dropdown,
-        #     settings.persona_settings,
-        #     "persona_file",
-        # ),
+        CharacterComponentToSetting(
+            oobabot_layout.character_dropdown,
+            settings.persona_settings,
+            "persona_file",
+        ),
         SimpleComponentToSetting(
             oobabot_layout.ai_name_textbox,
             settings.persona_settings,
@@ -197,7 +256,10 @@ def get_all(
             settings.discord_settings,
             "history_lines",
         ),
-        # todo: discord behavior checkbox group
+        BehaviorCheckboxGroupToSetting(
+            oobabot_layout.discord_behavior_checkbox_group,
+            settings.discord_settings,
+        ),
     ]
     # make a map from component to setting
     return {c.component: c for c in components_to_settings}
