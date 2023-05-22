@@ -39,12 +39,15 @@ class OobabotLayout:
     def setup_ui(
         self,
         get_logs: callable,
+        has_plausible_token: bool,
     ) -> None:
         with gr.Blocks():
             with gr.Row(elem_id="oobabot-tab"):
                 with gr.Column(min_width=450, scale=1):  # settings column
                     self.welcome_accordion = gr.Accordion(
-                        "Set Discord Token", elem_id="discord_bot_token_accordion"
+                        "Set Discord Token",
+                        elem_id="discord_bot_token_accordion",
+                        open=not has_plausible_token,
                     )
                     with self.welcome_accordion:
                         self._init_token_widgets()

@@ -21,7 +21,7 @@ from . import oobabot_constants, oobabot_layout, oobabot_worker
 params = {
     "is_tab": True,
     "activate": True,
-    "config_file": "config.yml",
+    "config_file": "oobabot-config.yml",
 }
 
 
@@ -138,7 +138,7 @@ TOKEN_LEN_CHARS = 72
 
 
 def token_is_plausible(token: str) -> bool:
-    return len(token) >= TOKEN_LEN_CHARS
+    return len(token.strip()) >= TOKEN_LEN_CHARS
 
 
 def make_link_from_token(
@@ -187,7 +187,13 @@ def connect_token_actions() -> None:
     )
 
     def handle_save_click(token: str):
-        is_token_valid = oobabot_worker.bot.test_discord_token(token.strip())
+        token = token.strip()
+        is_token_valid = oobabot_worker.bot.test_discord_token(token)
+        if is_token_valid:
+            oobabot_worker.bot.settings.discord_settings.set("discord_token", token)
+            oobabot_worker.bot.settings.write_to_file(params["config_file"])
+            oobabot_worker.reload()
+
         return (
             oobabot_layout.discord_invite_link_html.update(
                 value=update_discord_invite_link(token, is_token_valid, True)
@@ -213,9 +219,10 @@ def ui() -> None:
     """
     Creates custom gradio elements when the UI is launched.
     """
-
+    token = oobabot_worker.bot.settings.discord_settings.get_str("discord_token")
     oobabot_layout.setup_ui(
         get_logs=oobabot_worker.get_logs,
+        has_plausible_token=token_is_plausible(token),
     )
 
     # current_state = determine_current_state()
@@ -225,7 +232,6 @@ def ui() -> None:
     # todo: connect other actions
 
     # set token widget, it should cascade to other widgets
-    token = oobabot_worker.bot.settings.discord_settings.get_str("discord_token")
     oobabot_layout.discord_token_textbox.attach_load_event(
         lambda: oobabot_layout.discord_token_textbox.update(value=token),
         None,
