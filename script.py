@@ -2,6 +2,7 @@ import enum
 import importlib
 import logging
 import types
+import typing
 
 import modules
 
@@ -72,14 +73,128 @@ oobabot_layout = oobabot_layout.OobabotLayout()
 
 state = OobabotUIState.CLEAN
 
+
+##################################
+# behavior
+
+
+def determine_current_state() -> OobabotUIState:
+    if not oobabot_worker.has_discord_token():
+        return OobabotUIState.CLEAN
+    if oobabot_worker.is_running():
+        return OobabotUIState.STARTED
+    if oobabot_worker.stopping:
+        return OobabotUIState.STOPPING
+    return OobabotUIState.STOPPED
+
+
+# def enable_appropriate_widgets(state: OobabotUIState) -> None:
+#     # start by disabling all the things
+#     oobabot_layout.disable_all()
+
+#     match state:
+#         case OobabotUIState.CLEAN:
+#             oobabot_layout.welcome_accordion.open = True
+#             oobabot_layout.discord_token_textbox.interactive = True
+#             oobabot_layout.discord_token_save_button.interactive = True
+
+#         case OobabotUIState.HAS_TOKEN:
+#             print("HAS_TOKEN")
+#             oobabot_layout.welcome_accordion.open = True
+#             oobabot_layout.discord_token_textbox.interactive = True
+#             oobabot_layout.discord_token_save_button.interactive = True
+#             oobabot_layout.discord_invite_link_markdown.interactive = True
+#             # todo: set link value
+#             oobabot_layout.ive_done_all_this_button.interactive = True
+#             oobabot_layout.set_all_setting_widgets_interactive(True)
+
+#         case OobabotUIState.STOPPED:
+#             print("STOPPED")
+#             oobabot_layout.welcome_accordion.open = False
+#             oobabot_layout.discord_token_save_button.interactive = True
+#             oobabot_layout.ive_done_all_this_button.interactive = True
+#             oobabot_layout.start_button.interactive = True
+#             oobabot_layout.set_all_setting_widgets_interactive(True)
+
+#         case OobabotUIState.STARTED:
+#             print("STARTED")
+#             oobabot_layout.welcome_accordion.open = False
+#             oobabot_layout.discord_token_save_button.interactive = True
+#             oobabot_layout.ive_done_all_this_button.interactive = True
+#             oobabot_layout.stop_button.interactive = True
+#             oobabot_layout.set_all_setting_widgets_interactive(False)
+
+#         case OobabotUIState.STOPPING:
+#             print("STOPPING")
+#             oobabot_layout.welcome_accordion.open = False
+#             oobabot_layout.discord_token_save_button.interactive = True
+#             oobabot_layout.ive_done_all_this_button.interactive = True
+#             oobabot_layout.set_all_setting_widgets_interactive(True)
+
+
+TOKEN_LEN_CHARS = 72
+
+
+def make_link_from_token(
+    token: str, fn_calc_invite_url: typing.Optional[callable]
+) -> str:
+    if not token or not fn_calc_invite_url:
+        return "A link will appear here once you have set your Discord token."
+    link = fn_calc_invite_url(token)
+    print("link", link)
+    return (
+        f'<a href="{link}" target="_blank">Click here to invite your bot</a> '
+        + "to a Discord server."
+    )
+
+
+def update_discord_invite_link(new_token: str, is_token_valid: bool):
+    if is_token_valid:
+        return "🟢 Your token works!<br/><br/>" + make_link_from_token(
+            new_token, oobabot_worker.bot.generate_invite_url
+        )
+    if new_token:
+        return "❌ The token you entered is invalid."
+    return "A link will appear here once you have set your Discord token."
+
+
+def connect_token_actions() -> None:
+    # TODO: toggled open and closed
+    # oobabot_layout.welcome_accordion,
+
+    # turn on save button when token is entered and
+    # looks plausible
+    oobabot_layout.discord_token_textbox.change(
+        lambda token: oobabot_layout.discord_token_save_button.update(
+            interactive=len(token) >= TOKEN_LEN_CHARS
+        ),
+        inputs=[oobabot_layout.discord_token_textbox],
+        outputs=[
+            oobabot_layout.discord_token_save_button,
+        ],
+    )
+
+    def handle_save_click(token: str):
+        is_token_valid = oobabot_worker.bot.test_discord_token(token)
+        return (
+            oobabot_layout.discord_invite_link_html.update(
+                value=update_discord_invite_link(token, is_token_valid)
+            ),
+            oobabot_layout.ive_done_all_this_button.update(interactive=is_token_valid),
+        )
+
+    oobabot_layout.discord_token_save_button.click(
+        handle_save_click,
+        inputs=[oobabot_layout.discord_token_textbox],
+        outputs=[
+            oobabot_layout.discord_invite_link_html,
+            oobabot_layout.ive_done_all_this_button,
+        ],
+    )
+
+
 ##################################
 # oobabooga <> extension interface
-
-
-def on_ui_change():
-    current_state = determine_current_state()
-    # todo: save settings to file
-    enable_appropriate_widgets(current_state)
 
 
 def ui() -> None:
@@ -88,17 +203,16 @@ def ui() -> None:
     """
 
     oobabot_layout.setup_ui(
-        on_ui_change,
         get_logs=oobabot_worker.get_logs,
         bot=oobabot_worker.bot,
         settings=oobabot_worker.bot.settings,
     )
 
-    current_state = determine_current_state()
-    enable_appropriate_widgets(current_state)
+    # current_state = determine_current_state()
+    # enable_appropriate_widgets(current_state)
 
-    oobabot_layout.start_button.click(oobabot_worker.start)
-    oobabot_layout.stop_button.click(oobabot_worker.reload)
+    connect_token_actions()
+    # todo: connect other actions
 
 
 def custom_css() -> str:
@@ -118,70 +232,4 @@ def custom_js() -> str:
     """
     Returns custom JavaScript to be injected into the UI.
     """
-    return """
-var done_all_this = document.getElementById("oobabot_done_all_this");
-console.log(done_all_this);
-done_all_this.addEventListener(
-    "click",
-    function() {
-        var elem = document.querySelector("#discord_bot_token_accordion > .open");
-        elem.click();
-    }
-);
-"""
-
-
-def determine_current_state() -> OobabotUIState:
-    if not oobabot_worker.has_discord_token():
-        return OobabotUIState.CLEAN
-    if oobabot_worker.is_running():
-        return OobabotUIState.STARTED
-    if oobabot_worker.stopping:
-        return OobabotUIState.STOPPING
-    return OobabotUIState.STOPPED
-
-
-##################################
-# behavior
-def enable_appropriate_widgets(state: OobabotUIState) -> None:
-    # start by disabling all the things
-    oobabot_layout.disable_all()
-
-    match state:
-        case OobabotUIState.CLEAN:
-            oobabot_layout.welcome_accordion.open = True
-            oobabot_layout.discord_token_textbox.interactive = True
-            oobabot_layout.discord_token_save_button.interactive = True
-
-        case OobabotUIState.HAS_TOKEN:
-            print("HAS_TOKEN")
-            oobabot_layout.welcome_accordion.open = True
-            oobabot_layout.discord_token_textbox.interactive = True
-            oobabot_layout.discord_token_save_button.interactive = True
-            oobabot_layout.discord_invite_link_markdown.interactive = True
-            # todo: set link value
-            oobabot_layout.ive_done_all_this_button.interactive = True
-            oobabot_layout.set_all_setting_widgets_interactive(True)
-
-        case OobabotUIState.STOPPED:
-            print("STOPPED")
-            oobabot_layout.welcome_accordion.open = False
-            oobabot_layout.discord_token_save_button.interactive = True
-            oobabot_layout.ive_done_all_this_button.interactive = True
-            oobabot_layout.start_button.interactive = True
-            oobabot_layout.set_all_setting_widgets_interactive(True)
-
-        case OobabotUIState.STARTED:
-            print("STARTED")
-            oobabot_layout.welcome_accordion.open = False
-            oobabot_layout.discord_token_save_button.interactive = True
-            oobabot_layout.ive_done_all_this_button.interactive = True
-            oobabot_layout.stop_button.interactive = True
-            oobabot_layout.set_all_setting_widgets_interactive(False)
-
-        case OobabotUIState.STOPPING:
-            print("STOPPING")
-            oobabot_layout.welcome_accordion.open = False
-            oobabot_layout.discord_token_save_button.interactive = True
-            oobabot_layout.ive_done_all_this_button.interactive = True
-            oobabot_layout.set_all_setting_widgets_interactive(True)
+    return oobabot_constants.CUSTOM_JS
