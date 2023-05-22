@@ -1,9 +1,9 @@
 import typing
 
 import gradio as gr
-import modules
-
 from oobabot import oobabot
+
+import modules
 
 from . import oobabot_constants
 

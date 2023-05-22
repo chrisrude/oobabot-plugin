@@ -1,6 +1,11 @@
 import enum
+import importlib
+import logging
+import types
 
 import modules
+
+import oobabot
 
 from . import oobabot_constants, oobabot_layout, oobabot_worker
 
@@ -17,6 +22,37 @@ params = {
     "activate": True,
     "config_file": "config.yml",
 }
+
+
+# so, logging_colors.py, rather than using the logging module's built-in
+# formatter, is monkey-patching the logging module's StreamHandler.emit.
+# This is a problem for us, because we also use the logging module, but
+# don't want ANSI color codes showing up in HTML.  We also don't want
+# to break their logging.
+#
+# So, we're going to save their monkey-patched emit, reload the logging
+# module, save off the "real" emit, then re-apply their monkey-patch.
+#
+# We need to do all this before we create the oobabot_worker, so that
+# the logs created during startup are properly formatted.
+
+# save the monkey-patched emit
+hacked_emit = logging.StreamHandler.emit
+
+# reload the logging module
+importlib.reload(logging)
+
+# create our logger early
+oobabot.fancy_logger.init_logging(logging.DEBUG, True)
+ooba_logger = oobabot.fancy_logger.get()
+
+# manually apply the "correct" emit to each of the StreamHandlers
+# that fancy_logger created
+for handler in ooba_logger.handlers:
+    if isinstance(handler, logging.StreamHandler):
+        handler.emit = types.MethodType(logging.StreamHandler.emit, handler)
+
+logging.StreamHandler.emit = hacked_emit
 
 
 class OobabotUIState(enum.Enum):
