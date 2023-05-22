@@ -15,7 +15,7 @@ from . import oobabot_constants, oobabot_layout, oobabot_worker
 #
 # todo: verify that API extension is running
 # todo: automatically use loaded persona
-# todo: get oobabooga settings dir
+# todo: get Oobabooga settings dir
 # todo: a way to clear the discord token
 
 params = {
@@ -131,8 +131,14 @@ def determine_current_state() -> OobabotUIState:
 #             oobabot_layout.ive_done_all_this_button.interactive = True
 #             oobabot_layout.set_all_setting_widgets_interactive(True)
 
+##################################
+# discord token UI
 
 TOKEN_LEN_CHARS = 72
+
+
+def token_is_plausible(token: str) -> bool:
+    return len(token) >= TOKEN_LEN_CHARS
 
 
 def make_link_from_token(
@@ -141,20 +147,26 @@ def make_link_from_token(
     if not token or not fn_calc_invite_url:
         return "A link will appear here once you have set your Discord token."
     link = fn_calc_invite_url(token)
-    print("link", link)
     return (
-        f'<a href="{link}" target="_blank">Click here to invite your bot</a> '
-        + "to a Discord server."
+        f'<a href="{link}" id="oobabot-invite-link" target="_blank">Click here to <pre>'
+        + "invite your bot</pre> to a Discord server</a>."
     )
 
 
-def update_discord_invite_link(new_token: str, is_token_valid: bool):
+def update_discord_invite_link(new_token: str, is_token_valid: bool, is_tested: bool):
+    new_token = new_token.strip()
+    prefix = ""
+    if is_tested:
+        if is_token_valid:
+            prefix = "✅ Your token is valid.<br><br>"
+        else:
+            prefix = "❌ Your token is invalid."
     if is_token_valid:
-        return "🟢 Your token works!<br/><br/>" + make_link_from_token(
+        return prefix + make_link_from_token(
             new_token, oobabot_worker.bot.generate_invite_url
         )
     if new_token:
-        return "❌ The token you entered is invalid."
+        return prefix
     return "A link will appear here once you have set your Discord token."
 
 
@@ -166,7 +178,7 @@ def connect_token_actions() -> None:
     # looks plausible
     oobabot_layout.discord_token_textbox.change(
         lambda token: oobabot_layout.discord_token_save_button.update(
-            interactive=len(token) >= TOKEN_LEN_CHARS
+            interactive=token_is_plausible(token)
         ),
         inputs=[oobabot_layout.discord_token_textbox],
         outputs=[
@@ -175,10 +187,10 @@ def connect_token_actions() -> None:
     )
 
     def handle_save_click(token: str):
-        is_token_valid = oobabot_worker.bot.test_discord_token(token)
+        is_token_valid = oobabot_worker.bot.test_discord_token(token.strip())
         return (
             oobabot_layout.discord_invite_link_html.update(
-                value=update_discord_invite_link(token, is_token_valid)
+                value=update_discord_invite_link(token, is_token_valid, True)
             ),
             oobabot_layout.ive_done_all_this_button.update(interactive=is_token_valid),
         )
@@ -204,8 +216,6 @@ def ui() -> None:
 
     oobabot_layout.setup_ui(
         get_logs=oobabot_worker.get_logs,
-        bot=oobabot_worker.bot,
-        settings=oobabot_worker.bot.settings,
     )
 
     # current_state = determine_current_state()
@@ -213,6 +223,36 @@ def ui() -> None:
 
     connect_token_actions()
     # todo: connect other actions
+
+    # set token widget, it should cascade to other widgets
+    token = oobabot_worker.bot.settings.discord_settings.get_str("discord_token")
+    oobabot_layout.discord_token_textbox.attach_load_event(
+        lambda: oobabot_layout.discord_token_textbox.update(value=token),
+        None,
+    )
+    oobabot_layout.discord_token_save_button.attach_load_event(
+        lambda: oobabot_layout.discord_token_save_button.update(
+            interactive=token_is_plausible(token)
+        ),
+        None,
+    )
+    oobabot_layout.discord_invite_link_html.attach_load_event(
+        lambda: oobabot_layout.discord_invite_link_html.update(
+            # pretend that the token is valid here if it's plausible
+            value=update_discord_invite_link(
+                token,
+                token_is_plausible(token),
+                False,
+            )
+        ),
+        None,
+    )
+    oobabot_layout.ive_done_all_this_button.attach_load_event(
+        lambda: oobabot_layout.ive_done_all_this_button.update(
+            interactive=token_is_plausible(token)
+        ),
+        None,
+    )
 
 
 def custom_css() -> str:
