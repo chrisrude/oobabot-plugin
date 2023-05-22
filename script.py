@@ -211,6 +211,26 @@ def connect_token_actions() -> None:
     )
 
 
+def do_get_chars(token_is_plausible: bool = True):
+    return oobabot_layout.character_dropdown.update(
+        choices=modules.utils.get_available_characters(),
+        interactive=token_is_plausible,
+        # value=characters[0],???
+    )
+
+
+def connect_character_actions(token_is_plausible: bool) -> None:
+    oobabot_layout.character_dropdown.attach_load_event(
+        do_get_chars,
+        None,
+    )
+    oobabot_layout.reload_character_button.click(
+        do_get_chars,
+        inputs=[],
+        outputs=[oobabot_layout.character_dropdown],
+    )
+
+
 ##################################
 # oobabooga <> extension interface
 
@@ -229,6 +249,7 @@ def ui() -> None:
     # enable_appropriate_widgets(current_state)
 
     connect_token_actions()
+    connect_character_actions(token_is_plausible(token))
     # todo: connect other actions
 
     # set token widget, it should cascade to other widgets
