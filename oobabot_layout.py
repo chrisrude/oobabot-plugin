@@ -36,7 +36,7 @@ class OobabotLayout:
     stop_button: gr.Button
     log_output_html: gr.HTML
 
-    def setup_ui(
+    def layout_ui(
         self,
         get_logs: callable,
         has_plausible_token: bool,
@@ -127,12 +127,16 @@ class OobabotLayout:
             interactive=True,
         )
 
+    BY_SENTENCE = "by sentence"
+    SINGLE_MESSAGE = "single message"
+    STREAMING = "streaming [beta feature]"
+
     def _init_discord_behavior_widgets(self) -> None:
         self.split_responses_radio_group = gr.Radio(
-            ["by sentence", "single message", "streaming [beta feature]"],
+            [self.BY_SENTENCE, self.SINGLE_MESSAGE, self.STREAMING],
             label="Split Responses",
             info="How should `oobabot` split responses into messages?",
-            value="by sentence",
+            value=self.BY_SENTENCE,
             interactive=True,
         )
         self.history_lines_slider = gr.Slider(

@@ -8,7 +8,7 @@ import oobabot
 
 import modules
 
-from . import oobabot_constants, oobabot_layout, oobabot_worker
+from . import oobabot_constants, oobabot_input_handlers, oobabot_layout, oobabot_worker
 
 # can be set in settings.json with:
 #   "oobabot-config_file string": "~/oobabot/config.yml",
@@ -89,7 +89,7 @@ def update_discord_invite_link(new_token: str, is_token_valid: bool, is_tested: 
     prefix = ""
     if is_tested:
         if is_token_valid:
-            prefix = "✅ Your token is valid.<br><br>"
+            prefix = "✔️ Your token is valid.<br><br>"
         else:
             prefix = "❌ Your token is invalid."
     if is_token_valid:
@@ -101,12 +101,39 @@ def update_discord_invite_link(new_token: str, is_token_valid: bool, is_tested: 
     return "A link will appear here once you have set your Discord token."
 
 
-def connect_token_actions() -> None:
-    # TODO: toggled open and closed
-    # oobabot_layout.welcome_accordion,
+def init_button_enablers(token: str, plausible_token: bool) -> None:
+    """
+    Sets up handlers which will enable or disable buttons
+    based on the state of other inputs.
+    """
 
-    # turn on save button when token is entered and
-    # looks plausible
+    # first, set up the initial state of the buttons, when the UI first loads
+    def enable_when_token_plausible(component: gr.components.IOComponent) -> None:
+        component.attach_load_event(
+            lambda: component.update(interactive=plausible_token),
+            None,
+        )
+
+    enable_when_token_plausible(oobabot_layout.discord_token_save_button)
+    enable_when_token_plausible(oobabot_layout.ive_done_all_this_button)
+    enable_when_token_plausible(oobabot_layout.start_button)
+
+    # initialize the discord invite link value
+    oobabot_layout.discord_invite_link_html.attach_load_event(
+        lambda: oobabot_layout.discord_invite_link_html.update(
+            # pretend that the token is valid here if it's plausible,
+            # but don't show a green check
+            value=update_discord_invite_link(
+                token,
+                token_is_plausible,
+                False,
+            )
+        ),
+        None,
+    )
+
+    # turn on a handler for the token textbox which will enable
+    # the save button only when the entered token looks plausible
     oobabot_layout.discord_token_textbox.change(
         lambda token: oobabot_layout.discord_token_save_button.update(
             interactive=token_is_plausible(token)
@@ -117,49 +144,70 @@ def connect_token_actions() -> None:
         ],
     )
 
-    def handle_save_click(token: str):
-        token = token.strip()
-        is_token_valid = oobabot_worker.bot.test_discord_token(token)
-        if is_token_valid:
-            oobabot_worker.bot.settings.discord_settings.set("discord_token", token)
-            oobabot_worker.bot.settings.write_to_file(params["config_file"])
-            oobabot_worker.reload()
 
-        return (
+def init_button_handlers(
+    input_handlers: dict[
+        gr.components.IOComponent, oobabot_input_handlers.ComponentToSetting
+    ],
+) -> None:
+    """
+    Sets handlers that are called when buttons are pressed
+    """
+
+    def handle_save_click(*args):
+        # we've been passed the value of every input component,
+        # so pass each in turn to our input handler
+
+        results = []
+        token = None
+        is_token_valid = False
+
+        # iterate over args and input_handlers in parallel
+        for new_value, handler in zip(args, input_handlers.values()):
+            update = handler.update_component_from_event(new_value)
+            results.append(update)
+            if handler.component == oobabot_layout.discord_token_textbox:
+                # we're looking at the new value of the token, validate it
+                token = handler.read_from_settings()
+                is_token_valid = oobabot_worker.bot.test_discord_token(new_value)
+
+        oobabot_worker.bot.settings.write_to_file(params["config_file"])
+
+        # results has most of our updates, but we also need to provide ones
+        # for the discord invite link and the "I've done all this" button
+        results.append(
             oobabot_layout.discord_invite_link_html.update(
                 value=update_discord_invite_link(token, is_token_valid, True)
-            ),
-            oobabot_layout.ive_done_all_this_button.update(interactive=is_token_valid),
+            )
         )
+        results.append(
+            oobabot_layout.ive_done_all_this_button.update(interactive=is_token_valid)
+        )
+
+        return tuple(results)
 
     oobabot_layout.discord_token_save_button.click(
         handle_save_click,
-        inputs=[oobabot_layout.discord_token_textbox],
+        inputs=[*input_handlers.keys()],
         outputs=[
+            *input_handlers.keys(),
             oobabot_layout.discord_invite_link_html,
             oobabot_layout.ive_done_all_this_button,
         ],
     )
 
-
-def do_get_chars():
-    return oobabot_layout.character_dropdown.update(
-        choices=modules.utils.get_available_characters(),
-        interactive=True,
-        # value=characters[0],???
-    )
-
-
-def connect_character_actions() -> None:
-    oobabot_layout.character_dropdown.attach_load_event(
-        do_get_chars,
-        None,
-    )
-    oobabot_layout.reload_character_button.click(
-        do_get_chars,
-        inputs=[],
-        outputs=[oobabot_layout.character_dropdown],
-    )
+    # TODO_ ENABLE
+    # TODO_ ENABLE
+    # TODO_ ENABLE
+    # TODO_ ENABLE
+    # TODO_ ENABLE
+    # TODO_ ENABLE
+    # TODO_ ENABLE
+    # oobabot_layout.reload_character_button.click(
+    #     input_handlers[oobabot_layout.character_dropdown].update_component_from_event,
+    #     inputs=[],
+    #     outputs=[oobabot_layout.character_dropdown],
+    # )
 
 
 ##################################
@@ -173,68 +221,25 @@ def ui() -> None:
     token = oobabot_worker.bot.settings.discord_settings.get_str("discord_token")
     plausible_token = token_is_plausible(token)
 
-    oobabot_layout.setup_ui(
+    oobabot_layout.layout_ui(
         get_logs=oobabot_worker.get_logs,
         has_plausible_token=plausible_token,
     )
 
-    connect_token_actions()
-    connect_character_actions()
-    # todo: connect other actions
-
-    set_values_from_token(token, plausible_token)
-    set_values_from_settings(oobabot_worker.bot.settings)
-
-
-def set_values_from_token(token: str, plausible_token: bool) -> None:
-    def enable_when_token_plausible(component: gr.components.IOComponent) -> None:
-        component.attach_load_event(
-            lambda: component.update(interactive=plausible_token),
-            None,
-        )
-
-    # set token widget value, it will cascade interactive-enabling events
-    # to other UI components
-    oobabot_layout.discord_token_textbox.attach_load_event(
-        lambda: oobabot_layout.discord_token_textbox.update(value=token),
-        None,
+    # create our own handlers for every input event which will map
+    # between our settings object and its corresponding UI component
+    input_handlers = oobabot_input_handlers.get_all(
+        oobabot_layout,
+        oobabot_worker.bot.settings,
     )
-    enable_when_token_plausible(oobabot_layout.discord_token_save_button)
-    oobabot_layout.discord_invite_link_html.attach_load_event(
-        lambda: oobabot_layout.discord_invite_link_html.update(
-            # pretend that the token is valid here if it's plausible
-            value=update_discord_invite_link(
-                token,
-                token_is_plausible,
-                False,
-            )
-        ),
-        None,
-    )
-    enable_when_token_plausible(oobabot_layout.ive_done_all_this_button)
-    enable_when_token_plausible(oobabot_layout.start_button)
 
+    # for all input components, add initialization handlers to
+    # set their values from what we read from the settings file
+    for component_to_setting in input_handlers.values():
+        component_to_setting.init_component_from_setting()
 
-def set_values_from_settings(settings: oobabot.settings.Settings):
-    oobabot_layout.ai_name_textbox.attach_load_event(
-        lambda: oobabot_layout.ai_name_textbox.update(
-            value=settings.persona_settings.get_str("ai_name")
-        ),
-        None,
-    )
-    oobabot_layout.persona_textbox.attach_load_event(
-        lambda: oobabot_layout.persona_textbox.update(
-            value=settings.persona_settings.get_str("persona")
-        ),
-        None,
-    )
-    # todo: wake words
-    # wake_words_textbox: gr.Textbox
-
-    # discord behavior widgets
-    split_responses_radio_group: gr.Radio
-    history_lines_slider: gr.Slider
-    discord_behavior_checkbox_group: gr.CheckboxGroup
+    init_button_handlers(input_handlers)
+    init_button_enablers(token, plausible_token)
 
 
 def custom_css() -> str:

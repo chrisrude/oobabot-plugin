@@ -21,7 +21,7 @@ class OobabotWorker:
 
     def reload(self) -> None:
         """
-        Stops the oobabot if it's running, then reloads it.
+        Stops oobabot if it's running, then reloads it.
         """
         if self.thread is not None:
             self.stopping = True
