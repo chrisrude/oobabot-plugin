@@ -18,7 +18,9 @@ TOKEN_LEN_CHARS = 72
 
 def resource(name: str) -> str:
     # return importlib.resources.read_text("oobabot_plugin", name)
-    return pathlib.Path(os.path.join(os.path.dirname(__file__), name)).read_text()
+    return pathlib.Path(os.path.join(os.path.dirname(__file__), name)).read_text(
+        encoding="utf-8"
+    )
 
 
 def get_instructions_markdown() -> typing.Tuple[str, str]:

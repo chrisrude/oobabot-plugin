@@ -44,7 +44,7 @@
     font-size: 24px;
 }
 
-#oobabot-tab div.oobabot-output {
+#oobabot-tab .oobabot-output {
     background-color: #0C0C0C;
     color: #CCCCCC;
     font-family: Consolas, Lucida Console, monospace;
