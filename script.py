@@ -14,8 +14,8 @@ from . import oobabot_constants, oobabot_input_handlers, oobabot_layout, oobabot
 #   "oobabot-config_file string": "~/oobabot/config.yml",
 #
 # todo: verify that API extension is running
-# todo: automatically use loaded persona
-# todo: get Oobabooga settings dir?
+# todo: show that we're actually using the selected character
+# add stable diffusion settings
 
 params = {
     "is_tab": True,
@@ -159,19 +159,26 @@ def init_button_handlers(
         # so pass each in turn to our input handler
 
         results = []
-        token = None
-        is_token_valid = False
 
         # iterate over args and input_handlers in parallel
         for new_value, handler in zip(args, input_handlers.values()):
             update = handler.update_component_from_event(new_value)
             results.append(update)
-            if handler.component == oobabot_layout.discord_token_textbox:
-                # we're looking at the new value of the token, validate it
-                token = handler.read_from_settings()
-                is_token_valid = oobabot_worker.bot.test_discord_token(new_value)
 
         oobabot_worker.bot.settings.write_to_file(params["config_file"])
+
+        return tuple(results)
+
+    def handle_save_discord_token(*args):
+        # we've been passed the value of every input component,
+        # so pass each in turn to our input handler
+
+        # result is a tuple, convert it to a list so we can modify it
+        results = list(handle_save_click(*args))
+
+        # get the token from the settings
+        token = oobabot_worker.bot.settings.discord_settings.get_str("discord_token")
+        is_token_valid = oobabot_worker.bot.test_discord_token(token)
 
         # results has most of our updates, but we also need to provide ones
         # for the discord invite link and the "I've done all this" button
@@ -187,7 +194,7 @@ def init_button_handlers(
         return tuple(results)
 
     oobabot_layout.discord_token_save_button.click(
-        handle_save_click,
+        handle_save_discord_token,
         inputs=[*input_handlers.keys()],
         outputs=[
             *input_handlers.keys(),
@@ -209,6 +216,14 @@ def init_button_handlers(
         outputs=[oobabot_layout.character_dropdown],
     )
 
+    oobabot_layout.save_settings_button.click(
+        handle_save_click,
+        inputs=[*input_handlers.keys()],
+        outputs=[
+            *input_handlers.keys(),
+        ],
+    )
+
 
 ##################################
 # oobabooga <> extension interface
@@ -220,10 +235,14 @@ def ui() -> None:
     """
     token = oobabot_worker.bot.settings.discord_settings.get_str("discord_token")
     plausible_token = token_is_plausible(token)
+    stable_diffusion_keywords = (
+        oobabot_worker.bot.settings.stable_diffusion_settings.get("image_words")
+    )
 
     oobabot_layout.layout_ui(
         get_logs=oobabot_worker.get_logs,
         has_plausible_token=plausible_token,
+        stable_diffusion_keywords=stable_diffusion_keywords,
     )
 
     # create our own handlers for every input event which will map

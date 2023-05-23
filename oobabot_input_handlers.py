@@ -3,11 +3,11 @@ import pathlib
 import typing
 
 import gradio as gr
-import modules
-
 import oobabot
 import oobabot.overengineered_settings_parser
 import oobabot.settings
+
+import modules
 
 from . import oobabot_layout
 
@@ -259,6 +259,16 @@ def get_all(
         BehaviorCheckboxGroupToSetting(
             oobabot_layout.discord_behavior_checkbox_group,
             settings.discord_settings,
+        ),
+        SimpleComponentToSetting(
+            oobabot_layout.stable_diffusion_url_textbox,
+            settings.stable_diffusion_settings,
+            "stable_diffusion_url",
+        ),
+        SimpleComponentToSetting(
+            oobabot_layout.stable_diffusion_prefix,
+            settings.stable_diffusion_settings,
+            "extra_prompt_text",
         ),
     ]
     # make a map from component to setting

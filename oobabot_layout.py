@@ -36,14 +36,21 @@ class OobabotLayout:
     stop_button: gr.Button
     log_output_html: gr.HTML
 
+    # stable diffusion settings
+    stable_diffusion_url_textbox: gr.Textbox
+    stable_diffusion_prefix: gr.Textbox
+
+    save_settings_button: gr.Button
+
     def layout_ui(
         self,
         get_logs: callable,
         has_plausible_token: bool,
+        stable_diffusion_keywords: str,
     ) -> None:
         with gr.Blocks():
             with gr.Row(elem_id="oobabot-tab"):
-                with gr.Column(min_width=450, scale=1):  # settings column
+                with gr.Column(min_width=600, scale=1):  # settings column
                     self.welcome_accordion = gr.Accordion(
                         "Set Discord Token",
                         elem_id="discord_bot_token_accordion",
@@ -54,9 +61,19 @@ class OobabotLayout:
                     gr.Markdown("### Oobabot Persona")
                     with gr.Column(scale=0):
                         self._init_persona_widgets()
-                    gr.Markdown("### Discord Behavior")
-                    with gr.Column():
-                        self._init_discord_behavior_widgets()
+                    with gr.Row():
+                        with gr.Column():
+                            gr.Markdown("### Discord Behavior")
+                            self._init_discord_behavior_widgets()
+                        with gr.Column():
+                            gr.Markdown("### Stable Diffusion (optional)")
+                            self._init_stable_diffusion_widgets(
+                                stable_diffusion_keywords
+                            )
+                            self.save_settings_button = gr.Button(
+                                value="💾 Save Settings",
+                                elem_id="oobabot-save-settings",
+                            )
 
                 with gr.Column(scale=2):  # runtime status column
                     self._init_runtime_widgets(get_logs)
@@ -73,7 +90,7 @@ class OobabotLayout:
                 label="Discord Token",
                 show_label=False,
                 placeholder="Paste your Discord bot token here.",
-                value=" ",  # this is terrible
+                value=" ",  # ugh. this is so gradio fires a change when the value's set
             )
             self.discord_token_save_button = gr.Button(
                 value="💾", elem_id="oobabot-save-token"
@@ -160,6 +177,27 @@ class OobabotLayout:
                 f"{self.IGNORE_DMS} = don't reply to direct messages.  "
                 + f"{self.REPLY_IN_THREAD} = create a new thread for each response "
                 + "in a public channel."
+            ),
+            interactive=True,
+        )
+
+    def _init_stable_diffusion_widgets(self, stable_diffusion_keywords: str) -> None:
+        self.stable_diffusion_url_textbox = gr.Textbox(
+            label="Stable Diffusion URL",
+            info=(
+                "When this is set, the bot will contact Stable Diffusion to generate "
+                + "images and post them to Discord.  If the bot finds one of these "
+                + "words in a message, it will respond with an image: "
+                + ", ".join(stable_diffusion_keywords)
+            ),
+            interactive=True,
+        )
+        self.stable_diffusion_prefix = gr.Textbox(
+            label="Stable Diffusion Prefix",
+            info=(
+                "This prefix will be added in front of every user-supplied image "
+                + "request.  This is useful for setting up a 'character' for the "
+                + "bot to play."
             ),
             interactive=True,
         )
