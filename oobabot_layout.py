@@ -129,7 +129,7 @@ class OobabotLayout:
             bot to play.
             """,
             interactive=True,
-            lines=12,
+            lines=6,
         )
         self.wake_words_textbox = gr.Textbox(
             label="Wake Words",
