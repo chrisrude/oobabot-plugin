@@ -16,6 +16,7 @@ from . import oobabot_constants, oobabot_input_handlers, oobabot_layout, oobabot
 # todo: verify that API extension is running
 # todo: show that we're actually using the selected character
 # add stable diffusion settings
+# todo: wait for the bot to stop gracefully
 
 params = {
     "is_tab": True,
@@ -219,8 +220,73 @@ def init_button_handlers(
     oobabot_layout.save_settings_button.click(
         handle_save_click,
         inputs=[*input_handlers.keys()],
+        outputs=[*input_handlers.keys()],
+    )
+
+    def handle_start(*args):
+        # things to do!
+        # 1. save settings
+        # 2. disable all the inputs
+        # 3. disable the start button
+        # 4. enable the stop button
+        # 5. start the bot
+        results = list(handle_save_click(*args))
+        # the previous handler will have updated the input's values, but we also
+        # want to disable them.  We can do this by merging the dicts.
+        for update_dict, handler in zip(results, input_handlers.values()):
+            update_dict.update(handler.disabled())
+
+        # we also need to disable the start button, and enable the stop button
+        results.append(oobabot_layout.start_button.update(interactive=False))
+        results.append(oobabot_layout.stop_button.update(interactive=True))
+
+        # now start the bot!
+        oobabot_worker.start()
+
+        return list(results)
+
+    # start button!!!!
+    oobabot_layout.start_button.click(
+        handle_start,
+        inputs=[
+            *input_handlers.keys(),
+            oobabot_layout.start_button,
+            oobabot_layout.stop_button,
+        ],
         outputs=[
             *input_handlers.keys(),
+            oobabot_layout.start_button,
+            oobabot_layout.stop_button,
+        ],
+    )
+
+    def handle_stop(*args):
+        # things to do!
+        # 1. stop the bot
+        # 2. enable all the inputs
+        # 3. enable the start button
+        # 4. disable the stop button
+        results = []
+        for handler in input_handlers.values():
+            results.append(handler.enabled())
+
+        results.append(oobabot_layout.start_button.update(interactive=True))
+        results.append(oobabot_layout.stop_button.update(interactive=False))
+
+        return tuple(results)
+
+    # stop button!!!!
+    oobabot_layout.stop_button.click(
+        handle_stop,
+        inputs=[
+            *input_handlers.keys(),
+            oobabot_layout.start_button,
+            oobabot_layout.stop_button,
+        ],
+        outputs=[
+            *input_handlers.keys(),
+            oobabot_layout.start_button,
+            oobabot_layout.stop_button,
         ],
     )
 

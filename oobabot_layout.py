@@ -93,7 +93,7 @@ class OobabotLayout:
                 value=" ",  # ugh. this is so gradio fires a change when the value's set
             )
             self.discord_token_save_button = gr.Button(
-                value="💾", elem_id="oobabot-save-token"
+                value="💾 Save", elem_id="oobabot-save-token"
             )
         gr.Markdown(
             oobabot_constants.INSTRUCTIONS_PART_2_MD,
