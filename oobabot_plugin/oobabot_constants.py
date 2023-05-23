@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 INSTRUCTIONS_PART_1_MD = """
 # Welcome to `oobabot`
 

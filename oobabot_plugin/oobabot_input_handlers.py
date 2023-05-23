@@ -1,13 +1,14 @@
+# -*- coding: utf-8 -*-
 import abc
 import pathlib
 import typing
 
 import gradio as gr
+import modules
+
 import oobabot
 import oobabot.overengineered_settings_parser
 import oobabot.settings
-
-import modules
 
 from . import oobabot_layout
 

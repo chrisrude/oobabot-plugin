@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import importlib
 import logging
 import types
@@ -8,7 +9,10 @@ import modules
 
 import oobabot
 
-from . import oobabot_constants, oobabot_input_handlers, oobabot_layout, oobabot_worker
+from . import oobabot_constants
+from . import oobabot_input_handlers
+from . import oobabot_layout
+from . import oobabot_worker
 
 # can be set in settings.json with:
 #   "oobabot-config_file string": "~/oobabot/config.yml",
