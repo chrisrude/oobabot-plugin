@@ -8,7 +8,7 @@ import typing
 
 import gradio as gr
 
-from . import oobabot_constants
+from . import oobabot_strings
 
 
 class OobabotLayout:
@@ -86,13 +86,9 @@ class OobabotLayout:
                 with gr.Column(scale=2):  # runtime status column
                     self._init_runtime_widgets(get_logs)
 
-    def _init_token_widgets(
-        self,
-    ) -> None:
-        gr.Markdown(
-            oobabot_constants.INSTRUCTIONS_PART_1_MD,
-            elem_classes=["oobabot_instructions"],
-        )
+    def _init_token_widgets(self) -> None:
+        instructions_1, instructions_2 = oobabot_strings.get_instructions_markdown()
+        gr.Markdown(instructions_1, elem_classes=["oobabot_instructions"])
         with gr.Row():
             self.discord_token_textbox = gr.Textbox(
                 label="Discord Token",
@@ -103,10 +99,7 @@ class OobabotLayout:
             self.discord_token_save_button = gr.Button(
                 value="💾 Save", elem_id="oobabot-save-token"
             )
-        gr.Markdown(
-            oobabot_constants.INSTRUCTIONS_PART_2_MD,
-            elem_classes=["oobabot_instructions"],
-        )
+        gr.Markdown(instructions_2, elem_classes=["oobabot_instructions"])
         self.discord_invite_link_html = gr.HTML()
         self.ive_done_all_this_button = gr.Button(
             value="I've Done All This",

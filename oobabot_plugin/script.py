@@ -11,9 +11,9 @@ import types
 import gradio as gr
 from oobabot import fancy_logger
 
-from . import oobabot_constants
 from . import oobabot_input_handlers
 from . import oobabot_layout
+from . import oobabot_strings
 from . import oobabot_worker
 
 # can be set in settings.json with:
@@ -24,7 +24,7 @@ from . import oobabot_worker
 # add stable diffusion settings
 # todo: wait for the bot to stop gracefully
 
-STREAMING_PORT = 7860
+STREAMING_PORT = 7862
 # todo: find a way to get this from the config easier
 
 params = {
@@ -103,7 +103,7 @@ def init_button_enablers(
         lambda: layout.discord_invite_link_html.update(
             # pretend that the token is valid here if it's plausible,
             # but don't show a green check
-            value=oobabot_constants.update_discord_invite_link(
+            value=oobabot_strings.update_discord_invite_link(
                 token,
                 plausible_token,
                 False,
@@ -117,7 +117,7 @@ def init_button_enablers(
     # the save button only when the entered token looks plausible
     layout.discord_token_textbox.change(
         lambda token: layout.discord_token_save_button.update(
-            interactive=oobabot_constants.token_is_plausible(token)
+            interactive=oobabot_strings.token_is_plausible(token)
         ),
         inputs=[layout.discord_token_textbox],
         outputs=[
@@ -167,7 +167,7 @@ def init_button_handlers(
         # for the discord invite link and the "I've done all this" button
         results.append(
             layout.discord_invite_link_html.update(
-                value=oobabot_constants.update_discord_invite_link(
+                value=oobabot_strings.update_discord_invite_link(
                     token,
                     is_token_valid,
                     True,
@@ -295,7 +295,7 @@ def ui() -> None:
     token = oobabot_worker_instance.bot.settings.discord_settings.get_str(
         "discord_token"
     )
-    plausible_token = oobabot_constants.token_is_plausible(token)
+    plausible_token = oobabot_strings.token_is_plausible(token)
     image_words = (
         oobabot_worker_instance.bot.settings.stable_diffusion_settings.get_list(
             "image_words"
@@ -332,11 +332,11 @@ def custom_css() -> str:
     """
     Returns custom CSS to be injected into the UI.
     """
-    return oobabot_constants.LOG_CSS
+    return oobabot_strings.get_css()
 
 
 def custom_js() -> str:
     """
     Returns custom JavaScript to be injected into the UI.
     """
-    return oobabot_constants.CUSTOM_JS
+    return oobabot_strings.get_js()
