@@ -10,8 +10,10 @@ from . import layout
 from . import strings
 from . import worker
 
+# todo: show that we're actually using the selected character
 
-class OobabotPluginController:
+
+class OobabotController:
     """
     Controller for the oobabot UI plugin.  Contains
     all behavior for the UI, but no UI components
@@ -20,13 +22,15 @@ class OobabotPluginController:
 
     def __init__(
         self,
-        layout: layout.OobabotLayout,
-        worker: worker.OobabotWorker,
+        port: int,
+        config_file: str,
+        api_extension_loaded: bool,
     ):
-        self.layout = layout
-        self.worker = worker
+        self.layout = layout.OobabotLayout()
+        self.worker = worker.OobabotWorker(port, config_file, self.layout)
+        self.api_extension_loaded = api_extension_loaded
 
-    def init_button_enablers(
+    def _init_button_enablers(
         self,
         token: str,
         plausible_token: bool,
@@ -74,10 +78,10 @@ class OobabotPluginController:
             ],
         )
 
-    def get_input_handlers(self):
+    def _get_input_handlers(self):
         return self.worker.get_input_handlers(strings.get_available_characters)
 
-    def init_button_handlers(self) -> None:
+    def _init_button_handlers(self) -> None:
         """
         Sets handlers that are called when buttons are pressed
         """
@@ -89,7 +93,7 @@ class OobabotPluginController:
             results = []
 
             # iterate over args and input_handlers in parallel
-            for new_value, handler in zip(args, self.get_input_handlers().values()):
+            for new_value, handler in zip(args, self._get_input_handlers().values()):
                 update = handler.update_component_from_event(new_value)
                 results.append(update)
 
@@ -114,9 +118,9 @@ class OobabotPluginController:
                 self.layout.discord_invite_link_html.update(
                     value=strings.update_discord_invite_link(
                         token,
-                        is_token_valid,
-                        True,
-                        self.worker.bot.generate_invite_url,
+                        is_token_valid=is_token_valid,
+                        is_tested=True,
+                        fn_generate_invite_url=self.worker.bot.generate_invite_url,
                     )
                 )
             )
@@ -129,9 +133,9 @@ class OobabotPluginController:
 
         self.layout.discord_token_save_button.click(
             handle_save_discord_token,
-            inputs=[*self.get_input_handlers().keys()],
+            inputs=[*self._get_input_handlers().keys()],
             outputs=[
-                *self.get_input_handlers().keys(),
+                *self._get_input_handlers().keys(),
                 self.layout.discord_invite_link_html,
                 self.layout.ive_done_all_this_button,
                 self.layout.start_button,
@@ -153,8 +157,8 @@ class OobabotPluginController:
 
         self.layout.save_settings_button.click(
             handle_save_click,
-            inputs=[*self.get_input_handlers().keys()],
-            outputs=[*self.get_input_handlers().keys()],
+            inputs=[*self._get_input_handlers().keys()],
+            outputs=[*self._get_input_handlers().keys()],
         )
 
         def handle_start(*args):
@@ -168,7 +172,7 @@ class OobabotPluginController:
             # the previous handler will have updated the input's values, but we also
             # want to disable them.  We can do this by merging the dicts.
             for update_dict, handler in zip(
-                results, self.get_input_handlers().values()
+                results, self._get_input_handlers().values()
             ):
                 update_dict.update(handler.disabled())
 
@@ -185,12 +189,12 @@ class OobabotPluginController:
         self.layout.start_button.click(
             handle_start,
             inputs=[
-                *self.get_input_handlers().keys(),
+                *self._get_input_handlers().keys(),
                 self.layout.start_button,
                 self.layout.stop_button,
             ],
             outputs=[
-                *self.get_input_handlers().keys(),
+                *self._get_input_handlers().keys(),
                 self.layout.start_button,
                 self.layout.stop_button,
             ],
@@ -205,7 +209,7 @@ class OobabotPluginController:
             self.worker.reload()
 
             results = []
-            for handler in self.get_input_handlers().values():
+            for handler in self._get_input_handlers().values():
                 results.append(handler.enabled())
 
             results.append(self.layout.start_button.update(interactive=True))
@@ -218,7 +222,7 @@ class OobabotPluginController:
             handle_stop,
             inputs=[],
             outputs=[
-                *self.get_input_handlers().keys(),
+                *self._get_input_handlers().keys(),
                 self.layout.start_button,
                 self.layout.stop_button,
             ],
@@ -227,9 +231,6 @@ class OobabotPluginController:
     ##################################
     # oobabooga <> extension interface
 
-    # pylint: disable=C0103
-    # pylint doesn't like the method name, but it's
-    # mandated by the extension interface
     def init_ui(self) -> None:
         """
         Creates custom gradio elements when the UI is launched.
@@ -246,6 +247,7 @@ class OobabotPluginController:
             get_logs=self.worker.get_logs,
             has_plausible_token=plausible_token,
             stable_diffusion_keywords=stable_diffusion_keywords,
+            api_extension_loaded=self.api_extension_loaded,
         )
 
         # create our own handlers for every input event which will map
@@ -253,11 +255,11 @@ class OobabotPluginController:
 
         # for all input components, add initialization handlers to
         # set their values from what we read from the settings file
-        for component_to_setting in self.get_input_handlers().values():
+        for component_to_setting in self._get_input_handlers().values():
             component_to_setting.init_component_from_setting()
 
         # sets up what happens when each button is pressed
-        self.init_button_handlers()
+        self._init_button_handlers()
 
         # enables or disables buttons based on the state of other inputs
-        self.init_button_enablers(token, plausible_token)
+        self._init_button_enablers(token, plausible_token)

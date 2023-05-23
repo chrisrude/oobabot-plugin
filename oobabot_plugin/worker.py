@@ -17,6 +17,8 @@ from . import layout
 class OobabotWorker:
     """
     This class is responsible for running oobabot in a worker thread.
+    It also connects the plugin's input fields to the oobabot's internal
+    settings representation.
     """
 
     bot: oobabot.Oobabot
@@ -59,7 +61,7 @@ class OobabotWorker:
             f"ws://localhost:{self.port}/",
         ]
         self.bot = oobabot.Oobabot(args)
-        self.input_handlers = {}
+        self.handlers = {}
 
     def start(self) -> None:
         """
@@ -98,15 +100,6 @@ class OobabotWorker:
         )
 
     def save_settings(self):
-        if self.is_running():
-            # the reason is that we want to reload the existing config file
-            # immediately before writing the new settings to disk.  This is to
-            # handle the case that someone has edited the config file while
-            # the text-generation-webui is running.
-            raise RuntimeError("Cannot save settings while oobabot is running.")
-
-        # reload settings first.
-        self.reload()
         self.bot.settings.write_to_file(self.config_file)
 
     def get_input_handlers(

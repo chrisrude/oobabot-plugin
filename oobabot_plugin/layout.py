@@ -55,10 +55,11 @@ class OobabotLayout:
         get_logs: typing.Callable[[], str],
         has_plausible_token: bool,
         stable_diffusion_keywords: typing.List[str],
+        api_extension_loaded: bool,
     ) -> None:
         with gr.Blocks():
             with gr.Row(elem_id="oobabot-tab"):
-                with gr.Column(min_width=600, scale=1):  # settings column
+                with gr.Column(min_width=400, scale=1):  # settings column
                     self.welcome_accordion = gr.Accordion(
                         "Set Discord Token",
                         elem_id="discord_bot_token_accordion",
@@ -84,7 +85,7 @@ class OobabotLayout:
                             )
 
                 with gr.Column(scale=2):  # runtime status column
-                    self._init_runtime_widgets(get_logs)
+                    self._init_runtime_widgets(get_logs, api_extension_loaded)
 
     def _init_token_widgets(self) -> None:
         instructions_1, instructions_2 = strings.get_instructions_markdown()
@@ -193,6 +194,7 @@ class OobabotLayout:
                 + "words in a message, it will respond with an image: "
                 + ", ".join(stable_diffusion_keywords)
             ),
+            max_lines=1,
             interactive=True,
         )
         self.stable_diffusion_prefix = gr.Textbox(
@@ -208,6 +210,7 @@ class OobabotLayout:
     def _init_runtime_widgets(
         self,
         get_logs: typing.Callable[[], str],
+        api_extension_loaded: bool,
     ) -> None:
         with gr.Row():
             self.start_button = gr.Button(
@@ -219,6 +222,12 @@ class OobabotLayout:
                 interactive=False,
             )
         gr.Markdown("### Oobabot Status", elem_id="oobabot-status-heading")
+        if not api_extension_loaded:
+            gr.Markdown(
+                "**Warning**: The API extension is not loaded.  "
+                + "`Oobabot` will not work unless it is enabled.",
+                elem_id="oobabot-api-not-loaded",
+            )
         with gr.Row():
             self.log_output_html = gr.HTML(
                 label="Oobabot Log",
