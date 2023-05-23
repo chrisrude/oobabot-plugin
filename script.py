@@ -146,11 +146,25 @@ def init_button_enablers(token: str, plausible_token: bool) -> None:
     )
 
 
-def init_button_handlers(
-    input_handlers: dict[
-        gr.components.IOComponent, oobabot_input_handlers.ComponentToSetting
-    ],
-) -> None:
+input_handlers: dict[
+    gr.components.IOComponent, oobabot_input_handlers.ComponentToSetting
+]
+
+
+def init_input_handlers() -> None:
+    global input_handlers
+    input_handlers = oobabot_input_handlers.get_all(
+        oobabot_layout,
+        oobabot_worker.bot.settings,
+    )
+
+
+def get_input_handlers() -> dict:
+    global input_handlers
+    return input_handlers
+
+
+def init_button_handlers() -> None:
     """
     Sets handlers that are called when buttons are pressed
     """
@@ -162,11 +176,12 @@ def init_button_handlers(
         results = []
 
         # iterate over args and input_handlers in parallel
-        for new_value, handler in zip(args, input_handlers.values()):
+        for new_value, handler in zip(args, get_input_handlers().values()):
             update = handler.update_component_from_event(new_value)
             results.append(update)
 
         oobabot_worker.bot.settings.write_to_file(params["config_file"])
+        init_input_handlers()
 
         return tuple(results)
 
@@ -197,9 +212,9 @@ def init_button_handlers(
 
     oobabot_layout.discord_token_save_button.click(
         handle_save_discord_token,
-        inputs=[*input_handlers.keys()],
+        inputs=[*get_input_handlers().keys()],
         outputs=[
-            *input_handlers.keys(),
+            *get_input_handlers().keys(),
             oobabot_layout.discord_invite_link_html,
             oobabot_layout.ive_done_all_this_button,
             oobabot_layout.start_button,
@@ -221,8 +236,8 @@ def init_button_handlers(
 
     oobabot_layout.save_settings_button.click(
         handle_save_click,
-        inputs=[*input_handlers.keys()],
-        outputs=[*input_handlers.keys()],
+        inputs=[*get_input_handlers().keys()],
+        outputs=[*get_input_handlers().keys()],
     )
 
     def handle_start(*args):
@@ -235,7 +250,7 @@ def init_button_handlers(
         results = list(handle_save_click(*args))
         # the previous handler will have updated the input's values, but we also
         # want to disable them.  We can do this by merging the dicts.
-        for update_dict, handler in zip(results, input_handlers.values()):
+        for update_dict, handler in zip(results, get_input_handlers().values()):
             update_dict.update(handler.disabled())
 
         # we also need to disable the start button, and enable the stop button
@@ -251,12 +266,12 @@ def init_button_handlers(
     oobabot_layout.start_button.click(
         handle_start,
         inputs=[
-            *input_handlers.keys(),
+            *get_input_handlers().keys(),
             oobabot_layout.start_button,
             oobabot_layout.stop_button,
         ],
         outputs=[
-            *input_handlers.keys(),
+            *get_input_handlers().keys(),
             oobabot_layout.start_button,
             oobabot_layout.stop_button,
         ],
@@ -268,8 +283,11 @@ def init_button_handlers(
         # 2. enable all the inputs
         # 3. enable the start button
         # 4. disable the stop button
+        oobabot_worker.reload()
+        init_input_handlers()
+
         results = []
-        for handler in input_handlers.values():
+        for handler in get_input_handlers().values():
             results.append(handler.enabled())
 
         results.append(oobabot_layout.start_button.update(interactive=True))
@@ -281,12 +299,12 @@ def init_button_handlers(
     oobabot_layout.stop_button.click(
         handle_stop,
         inputs=[
-            *input_handlers.keys(),
+            *get_input_handlers().keys(),
             oobabot_layout.start_button,
             oobabot_layout.stop_button,
         ],
         outputs=[
-            *input_handlers.keys(),
+            *get_input_handlers().keys(),
             oobabot_layout.start_button,
             oobabot_layout.stop_button,
         ],
@@ -315,18 +333,15 @@ def ui() -> None:
 
     # create our own handlers for every input event which will map
     # between our settings object and its corresponding UI component
-    input_handlers = oobabot_input_handlers.get_all(
-        oobabot_layout,
-        oobabot_worker.bot.settings,
-    )
+    init_input_handlers()
 
     # for all input components, add initialization handlers to
     # set their values from what we read from the settings file
-    for component_to_setting in input_handlers.values():
+    for component_to_setting in get_input_handlers().values():
         component_to_setting.init_component_from_setting()
 
     # sets up what happens when each button is pressed
-    init_button_handlers(input_handlers)
+    init_button_handlers()
 
     # enables or disables buttons based on the state of other inputs
     init_button_enablers(token, plausible_token)
