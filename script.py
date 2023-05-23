@@ -191,6 +191,7 @@ def init_button_handlers(
         results.append(
             oobabot_layout.ive_done_all_this_button.update(interactive=is_token_valid)
         )
+        results.append(oobabot_layout.start_button.update(interactive=is_token_valid))
 
         return tuple(results)
 
@@ -201,6 +202,7 @@ def init_button_handlers(
             *input_handlers.keys(),
             oobabot_layout.discord_invite_link_html,
             oobabot_layout.ive_done_all_this_button,
+            oobabot_layout.start_button,
         ],
     )
 
