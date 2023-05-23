@@ -13,23 +13,6 @@ import gradio as gr
 import oobabot.overengineered_settings_parser
 
 
-def get_available_characters():
-    """
-    This is a list of all files in the ./characters folder whose
-    extension is .json, .yaml, or .yml
-
-    The list is then sorted alphabetically, and 'None' is added to
-    the start.
-    """
-    characters = []
-    for extension in ["yml", "yaml", "json"]:
-        for filepath in pathlib.Path("characters").glob(f"*.{extension}"):
-            characters.append(filepath.stem)
-    characters.sort()
-    characters.insert(0, "None")
-    return characters
-
-
 class ComponentToSetting(abc.ABC):
     """
     This class is responsible for managing the interaction between
@@ -114,6 +97,16 @@ class CharacterComponentToSetting(SimpleComponentToSetting):
 
     FOLDER = "characters"
 
+    def __init__(
+        self,
+        component: gr.components.IOComponent,
+        settings_group: oobabot.overengineered_settings_parser.ConfigSettingGroup,
+        setting_name: str,
+        fn_get_character_list: typing.Callable[[], typing.List[str]],
+    ):
+        super().__init__(component, settings_group, setting_name)
+        self.fn_get_character_list = fn_get_character_list
+
     def _character_name_to_filepath(self, character: str) -> str:
         # this is how it's done in chat.py... there's no method to
         # call, so just do the same thing here
@@ -141,7 +134,7 @@ class CharacterComponentToSetting(SimpleComponentToSetting):
         path = pathlib.Path(str(filename))
         if not path.exists():
             return ""
-        characters = get_available_characters()
+        characters = self.fn_get_character_list()
         for character in characters:
             if character.lower() == path.stem.lower():
                 return character
@@ -151,7 +144,7 @@ class CharacterComponentToSetting(SimpleComponentToSetting):
         self.write_to_settings(new_value)
         result = self.component.update(
             value=self.read_from_settings(),
-            choices=get_available_characters(),
+            choices=self.fn_get_character_list(),
         )
         return result
 
@@ -160,7 +153,7 @@ class CharacterComponentToSetting(SimpleComponentToSetting):
             return self.component.update(
                 value=self.read_from_settings(),
                 interactive=True,
-                choices=get_available_characters(),
+                choices=self.fn_get_character_list(),
             )
 
         self.component.attach_load_event(

@@ -78,3 +78,20 @@ def update_discord_invite_link(
     if new_token:
         return prefix
     return "A link will appear here once you have set your Discord token."
+
+
+def get_available_characters():
+    """
+    This is a list of all files in the ./characters folder whose
+    extension is .json, .yaml, or .yml
+
+    The list is then sorted alphabetically, and 'None' is added to
+    the start.
+    """
+    characters = []
+    for extension in ["yml", "yaml", "json"]:
+        for filepath in pathlib.Path("characters").glob(f"*.{extension}"):
+            characters.append(filepath.stem)
+    characters.sort()
+    characters.insert(0, "None")
+    return characters

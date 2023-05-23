@@ -8,7 +8,7 @@ import typing
 
 import gradio as gr
 
-from . import oobabot_strings
+from . import strings
 
 
 class OobabotLayout:
@@ -87,7 +87,7 @@ class OobabotLayout:
                     self._init_runtime_widgets(get_logs)
 
     def _init_token_widgets(self) -> None:
-        instructions_1, instructions_2 = oobabot_strings.get_instructions_markdown()
+        instructions_1, instructions_2 = strings.get_instructions_markdown()
         gr.Markdown(instructions_1, elem_classes=["oobabot_instructions"])
         with gr.Row():
             self.discord_token_textbox = gr.Textbox(
