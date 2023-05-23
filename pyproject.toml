@@ -10,6 +10,7 @@ repository = "https://github.com/chrisrude/oobabot-plugin"
 [tool.poetry.dependencies]
 python = "^3.8.1"
 oobabot = "^0.1.8"
+gradio = "^3.31.0"
 
 [build-system]
 requires = ["poetry-core"]

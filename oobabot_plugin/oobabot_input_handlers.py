@@ -1,19 +1,41 @@
 # -*- coding: utf-8 -*-
+"""
+Classes for managing the interaction between gradio input
+components and oobabot settings.
+"""
+
+
 import abc
 import pathlib
 import typing
 
 import gradio as gr
-import modules
-
-import oobabot
 import oobabot.overengineered_settings_parser
-import oobabot.settings
 
-from . import oobabot_layout
+
+def get_available_characters():
+    """
+    This is a list of all files in the ./characters folder whose
+    extension is .json, .yaml, or .yml
+
+    The list is then sorted alphabetically, and 'None' is added to
+    the start.
+    """
+    characters = []
+    for extension in ["yml", "yaml", "json"]:
+        for filepath in pathlib.Path("characters").glob(f"*.{extension}"):
+            characters.append(filepath.stem)
+    characters.sort()
+    characters.insert(0, "None")
+    return characters
 
 
 class ComponentToSetting(abc.ABC):
+    """
+    This class is responsible for managing the interaction between
+    a gradio component and a setting in the settings file.
+    """
+
     def __init__(self, component: gr.components.IOComponent):
         self.component = component
 
@@ -23,7 +45,6 @@ class ComponentToSetting(abc.ABC):
         Takes the current value of the component and writes
         it to the setting group
         """
-        ...
 
     @abc.abstractmethod
     def read_from_settings(self) -> str:
@@ -31,7 +52,6 @@ class ComponentToSetting(abc.ABC):
         Takes the current value of the setting and returns
         its value.
         """
-        ...
 
     def init_component_from_setting(self):
         def init_component():
@@ -57,6 +77,12 @@ class ComponentToSetting(abc.ABC):
 
 
 class SimpleComponentToSetting(ComponentToSetting):
+    """
+    A basic implementation of ComponentToSetting that handles
+    settings that are just a 1:1 mapping to a single string,
+    int, or bool value.
+    """
+
     def __init__(
         self,
         component: gr.components.IOComponent,
@@ -70,12 +96,22 @@ class SimpleComponentToSetting(ComponentToSetting):
     def write_to_settings(self, new_value: typing.Any) -> None:
         self.settings_group.set(self.setting_name, str(new_value).strip())
 
-    def read_from_settings(self) -> str:
+    def read_from_settings(
+        self,
+    ) -> oobabot.overengineered_settings_parser.SettingValueType:
         val = self.settings_group.get(self.setting_name)
         return val
 
 
 class CharacterComponentToSetting(SimpleComponentToSetting):
+    """
+    A specific implementation of SimpleComponentToSetting that
+    handles the character setting.  "Characters" are just
+    files in the ./characters folder, without extensions.
+    This class attempts to match the behavior of chat.py's
+    character selection.
+    """
+
     FOLDER = "characters"
 
     def _character_name_to_filepath(self, character: str) -> str:
@@ -85,11 +121,11 @@ class CharacterComponentToSetting(SimpleComponentToSetting):
         for extension in ["yml", "yaml", "json"]:
             filepath = pathlib.Path(f"{self.FOLDER}/{character}.{extension}")
             if filepath.exists():
-                filename = filepath.resolve()
+                filename = str(filepath.resolve())
         return filename
 
-    def write_to_settings(self, character_name: str) -> None:
-        filename = self._character_name_to_filepath(character_name)
+    def write_to_settings(self, new_value: str) -> None:
+        filename = self._character_name_to_filepath(new_value)
         super().write_to_settings(filename)
 
     def read_from_settings(self) -> str:
@@ -102,10 +138,10 @@ class CharacterComponentToSetting(SimpleComponentToSetting):
         filename = super().read_from_settings()
         if not filename:
             return ""
-        path = pathlib.Path(filename)
+        path = pathlib.Path(str(filename))
         if not path.exists():
             return ""
-        characters = modules.utils.get_available_characters()
+        characters = get_available_characters()
         for character in characters:
             if character.lower() == path.stem.lower():
                 return character
@@ -115,7 +151,7 @@ class CharacterComponentToSetting(SimpleComponentToSetting):
         self.write_to_settings(new_value)
         result = self.component.update(
             value=self.read_from_settings(),
-            choices=modules.utils.get_available_characters(),
+            choices=get_available_characters(),
         )
         return result
 
@@ -124,7 +160,7 @@ class CharacterComponentToSetting(SimpleComponentToSetting):
             return self.component.update(
                 value=self.read_from_settings(),
                 interactive=True,
-                choices=modules.utils.get_available_characters(),
+                choices=get_available_characters(),
             )
 
         self.component.attach_load_event(
@@ -133,24 +169,43 @@ class CharacterComponentToSetting(SimpleComponentToSetting):
         )
 
 
-class WakewordsComponentToSetting(SimpleComponentToSetting):
+class ListComponentToSetting(SimpleComponentToSetting):
+    """
+    A specific implementation of SimpleComponentToSetting that
+    handles settings that are lists of strings.
+    """
+
     def write_to_settings(self, new_value: str) -> None:
         words = [word.strip() for word in new_value.split(",")]
         self.settings_group.set(self.setting_name, words)
 
     def read_from_settings(self) -> str:
-        wake_words = self.settings_group.get_list(self.setting_name)
-        return ", ".join(wake_words)
+        word_list = self.settings_group.get_list(self.setting_name)
+        word_list = [str(word).strip() for word in word_list]
+        return ", ".join(word_list)
 
 
 class ResponseRadioComponentToSetting(ComponentToSetting):
+    """
+    A specific implementation of ComponentToSetting that
+    handles the radio button group for how we split
+    responses into messages.  There are currently 3
+    radio options, and 2 binary flags we will set.
+    """
+
     def __init__(
         self,
         component: gr.components.IOComponent,
         settings_group: oobabot.overengineered_settings_parser.ConfigSettingGroup,
+        single_message_label: str,
+        streaming_label: str,
+        by_sentence_label: str,
     ):
         super().__init__(component)
         self.settings_group = settings_group
+        self.single_message_label = single_message_label
+        self.streaming_label = streaming_label
+        self.by_sentence_label = by_sentence_label
 
     def _split_radio_group_to_settings(
         self,
@@ -158,9 +213,9 @@ class ResponseRadioComponentToSetting(ComponentToSetting):
     ) -> typing.Tuple[bool, bool]:
         dont_split_responses = False
         stream_responses = False
-        if new_value == oobabot_layout.OobabotLayout.SINGLE_MESSAGE:
+        if new_value == self.single_message_label:
             dont_split_responses = True
-        elif new_value == oobabot_layout.OobabotLayout.STREAMING:
+        elif new_value == self.streaming_label:
             stream_responses = True
         return (dont_split_responses, stream_responses)
 
@@ -170,10 +225,10 @@ class ResponseRadioComponentToSetting(ComponentToSetting):
         stream_responses: bool,
     ) -> str:
         if dont_split_responses:
-            return oobabot_layout.OobabotLayout.SINGLE_MESSAGE
+            return self.single_message_label
         if stream_responses:
-            return oobabot_layout.OobabotLayout.STREAMING
-        return oobabot_layout.OobabotLayout.BY_SENTENCE
+            return self.streaming_label
+        return self.by_sentence_label
 
     def write_to_settings(self, new_value: str) -> None:
         dont_split_responses, stream_responses = self._split_radio_group_to_settings(
@@ -182,95 +237,41 @@ class ResponseRadioComponentToSetting(ComponentToSetting):
         self.settings_group.set("dont_split_responses", dont_split_responses)
         self.settings_group.set("stream_responses", stream_responses)
 
-    def read_from_settings(self) -> dict:
+    def read_from_settings(self) -> str:
         return self._settings_to_radio_group_value(
-            self.settings_group.get("dont_split_responses"),
-            self.settings_group.get("stream_responses"),
+            bool(self.settings_group.get("dont_split_responses")),
+            bool(self.settings_group.get("stream_responses")),
         )
 
 
-class BehaviorCheckboxGroupToSetting(ComponentToSetting):
+class CheckboxGroupToSetting(ComponentToSetting):
+    """
+    A generic implementation of ComponentToSetting that
+    handles a group of checkboxes.  The checkboxes are
+    identified by a list of strings, and each setting
+    is a boolean value.
+    """
+
     def __init__(
         self,
         component: gr.components.IOComponent,
         settings_group: oobabot.overengineered_settings_parser.ConfigSettingGroup,
+        options: typing.List[typing.Tuple[str, str]],
     ):
         super().__init__(component)
         self.settings_group = settings_group
-
-    OPTIONS = [
-        ("ignore_dms", oobabot_layout.OobabotLayout.IGNORE_DMS),
-        ("reply_in_thread", oobabot_layout.OobabotLayout.REPLY_IN_THREAD),
-    ]
+        self.options = options
 
     def write_to_settings(self, new_values: typing.List[str]) -> None:
         # we'll get a list of strings reflecting the values of the
         # checked boxes in the group
-        for option_setting, option_ui_string in self.OPTIONS:
+        for option_setting, option_ui_string in self.options:
             value = option_ui_string in new_values
             self.settings_group.set(option_setting, value)
 
     def read_from_settings(self) -> typing.List[str]:
         options_on = []
-        for option_setting, option_ui_string in self.OPTIONS:
+        for option_setting, option_ui_string in self.options:
             if self.settings_group.get(option_setting):
                 options_on.append(option_ui_string)
         return options_on
-
-
-def get_all(
-    oobabot_layout: oobabot_layout.OobabotLayout,
-    settings: oobabot.settings.Settings,
-) -> dict[gr.components.IOComponent, ComponentToSetting]:
-    components_to_settings = [
-        SimpleComponentToSetting(
-            oobabot_layout.discord_token_textbox,
-            settings.discord_settings,
-            "discord_token",
-        ),
-        CharacterComponentToSetting(
-            oobabot_layout.character_dropdown,
-            settings.persona_settings,
-            "persona_file",
-        ),
-        SimpleComponentToSetting(
-            oobabot_layout.ai_name_textbox,
-            settings.persona_settings,
-            "ai_name",
-        ),
-        SimpleComponentToSetting(
-            oobabot_layout.persona_textbox,
-            settings.persona_settings,
-            "persona",
-        ),
-        WakewordsComponentToSetting(
-            oobabot_layout.wake_words_textbox,
-            settings.persona_settings,
-            "wakewords",
-        ),
-        ResponseRadioComponentToSetting(
-            oobabot_layout.split_responses_radio_group,
-            settings.discord_settings,
-        ),
-        SimpleComponentToSetting(
-            oobabot_layout.history_lines_slider,
-            settings.discord_settings,
-            "history_lines",
-        ),
-        BehaviorCheckboxGroupToSetting(
-            oobabot_layout.discord_behavior_checkbox_group,
-            settings.discord_settings,
-        ),
-        SimpleComponentToSetting(
-            oobabot_layout.stable_diffusion_url_textbox,
-            settings.stable_diffusion_settings,
-            "stable_diffusion_url",
-        ),
-        SimpleComponentToSetting(
-            oobabot_layout.stable_diffusion_prefix,
-            settings.stable_diffusion_settings,
-            "extra_prompt_text",
-        ),
-    ]
-    # make a map from component to setting
-    return {c.component: c for c in components_to_settings}

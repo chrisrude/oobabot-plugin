@@ -1,4 +1,11 @@
 # -*- coding: utf-8 -*-
+"""
+This lays out the structure of the oobabot UI.
+It contains no behavior, only defining the UI components.
+"""
+
+import typing
+
 import gradio as gr
 
 from . import oobabot_constants
@@ -45,9 +52,9 @@ class OobabotLayout:
 
     def layout_ui(
         self,
-        get_logs: callable,
+        get_logs: typing.Callable[[], str],
         has_plausible_token: bool,
-        stable_diffusion_keywords: str,
+        stable_diffusion_keywords: typing.List[str],
     ) -> None:
         with gr.Blocks():
             with gr.Row(elem_id="oobabot-tab"):
@@ -182,7 +189,9 @@ class OobabotLayout:
             interactive=True,
         )
 
-    def _init_stable_diffusion_widgets(self, stable_diffusion_keywords: str) -> None:
+    def _init_stable_diffusion_widgets(
+        self, stable_diffusion_keywords: typing.List[str]
+    ) -> None:
         self.stable_diffusion_url_textbox = gr.Textbox(
             label="Stable Diffusion URL",
             info=(
@@ -203,7 +212,10 @@ class OobabotLayout:
             interactive=True,
         )
 
-    def _init_runtime_widgets(self, get_logs: callable) -> None:
+    def _init_runtime_widgets(
+        self,
+        get_logs: typing.Callable[[], str],
+    ) -> None:
         with gr.Row():
             self.start_button = gr.Button(
                 value="Start Oobabot",
