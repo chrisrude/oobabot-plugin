@@ -11,6 +11,9 @@ from oobabot_plugin import strings
 from oobabot_plugin import worker
 
 # todo: show that we're actually using the selected character
+# todo: params text box for the stable diffusion settings
+# hanging bug on exit
+# todo:
 
 
 class OobabotController:

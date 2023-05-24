@@ -47,6 +47,7 @@ class OobabotLayout:
     # stable diffusion settings
     stable_diffusion_url_textbox: gr.Textbox
     stable_diffusion_prefix: gr.Textbox
+    stable_diffusion_params: gr.Textbox
 
     save_settings_button: gr.Button
 
@@ -155,7 +156,7 @@ class OobabotLayout:
 
     def _init_discord_behavior_widgets(self) -> None:
         self.split_responses_radio_group = gr.Radio(
-            [self.BY_SENTENCE, self.SINGLE_MESSAGE, self.STREAMING],
+            [self.BY_SENTENCE, self.SINGLE_MESSAGE],
             label="Split Responses",
             info="How should `oobabot` split responses into messages?",
             value=self.BY_SENTENCE,
