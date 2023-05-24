@@ -9,14 +9,14 @@ This is a plugin which allows **`oobabot`** to run from within the text-generati
 ## Installation
 
 1. [Install oobabooga/text-generation-webui](https://github.com/oobabooga/text-generation-webui#installation), and get a model running on it.
-1. from a command prompt, run these commands:
+1. from a command prompt, activate the same conda environment you used to install text-generation-webui, and install the plugin from PyPi:
 
     ```bash
     conda activate textgen
     pip install oobabot-plugin
     ```
 
-1. Then run:
+1. Then just run this to create the `oobabot` plugin directory (`./extensions/oobabot`) and install the plugin's hook (`script.py`) into the Oobabooga server:
 
     ```bash
     oobabot-plugin install
