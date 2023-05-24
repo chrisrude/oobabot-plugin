@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "oobabot-plugin"
 version = "0.1.8"
-description = "A plugin to oobabooga's text-generation-webui supporting AI-driven Discord bots."
+description = "A Discord bot plugin to oobabooga's text-generation-webui, based on oobabot."
 authors = ["Christopher Rude <chris@rudesoftware.net>"]
 license = "MIT"
 readme = "README.md"
@@ -11,6 +11,9 @@ repository = "https://github.com/chrisrude/oobabot-plugin"
 python = "^3.8.1"
 oobabot = "^0.1.8"
 gradio = "^3.31.0"
+
+[tool.poetry.scripts]
+oobabot-plugin = 'oobabot_plugin.install:main'
 
 [build-system]
 requires = ["poetry-core"]
@@ -46,6 +49,3 @@ j = 8
 max-line-length = 88
 disable = "C0116,R0902,R0903,R0912,R0913,R0914,W0511,W0621"
 include-naming-hint = true
-
-[tool.poetry.scripts]
-oobabot-plugin = 'oobabot_plugin.install:main'
