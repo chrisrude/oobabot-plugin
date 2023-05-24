@@ -47,7 +47,11 @@ def ui() -> None:
     api_extension_loaded = True
     try:
         # pylint: disable=import-outside-toplevel
-        from modules import shared
+        # we need to import this dynamically, because it's
+        # not guaranteed to be installed, and will only
+        # exist when running in the context of the
+        # oobabooga server.
+        from modules import shared  # type: ignore
 
         # pylint: enable=import-outside-toplevel
 
