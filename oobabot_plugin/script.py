@@ -4,8 +4,8 @@ Main entry point for the oobabot plugin.
 This file's name is mandatory, and must be "script.py",
 as that's how the plugin loader finds it.
 """
-from . import controller
-from . import strings
+from oobabot_plugin import controller
+from oobabot_plugin import strings
 
 # we'll try to discover what the user has actually set the
 # port to, but if we fail for some reason, fall back to this

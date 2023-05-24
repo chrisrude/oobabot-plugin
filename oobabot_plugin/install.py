@@ -79,16 +79,26 @@ def do_uninstall(cwd: str) -> None:
 
 
 def main():
-    parser = argparse.ArgumentParser()
+    # add note that this must be run from the Oobabooga root directory
+    parser = argparse.ArgumentParser(
+        description="Install or uninstall the oobabot plugin.",
+        epilog="This script must be run from the root directory of "
+        + "an oobabooga install.",
+    )
     subparsers = parser.add_subparsers()
 
-    parser_install = subparsers.add_parser("install")
-    parser_install.set_defaults(func=do_install)
+    subparsers.add_parser("install", help="Install the oobabot plugin.").set_defaults(
+        func=do_install
+    )
 
-    parser_uninstall = subparsers.add_parser("uninstall")
-    parser_uninstall.set_defaults(func=do_uninstall)
+    subparsers.add_parser(
+        "uninstall", help="Uninstall the oobabot plugin."
+    ).set_defaults(func=do_uninstall)
 
     args = parser.parse_args()
+    if not args or not hasattr(args, "func"):
+        parser.print_help()
+        sys.exit(0)
 
     cwd = os.getcwd()
     args.func(cwd)

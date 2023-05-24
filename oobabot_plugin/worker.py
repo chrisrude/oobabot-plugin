@@ -10,8 +10,8 @@ import typing
 import gradio as gr
 from oobabot import oobabot
 
-from . import input_handlers
-from . import layout
+from oobabot_plugin import input_handlers
+from oobabot_plugin import layout
 
 
 class OobabotWorker:

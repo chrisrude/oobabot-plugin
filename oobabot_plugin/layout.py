@@ -8,7 +8,7 @@ import typing
 
 import gradio as gr
 
-from . import strings
+from oobabot_plugin import strings
 
 
 class OobabotLayout:

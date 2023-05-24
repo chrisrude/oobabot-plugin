@@ -6,9 +6,9 @@ all behavior for the UI, but no UI components.
 
 import gradio as gr
 
-from . import layout
-from . import strings
-from . import worker
+from oobabot_plugin import layout
+from oobabot_plugin import strings
+from oobabot_plugin import worker
 
 # todo: show that we're actually using the selected character
 
