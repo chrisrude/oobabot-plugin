@@ -8,6 +8,8 @@ script.py.  Responsibilities include:
 """
 
 import sys
+import threading
+import time
 
 from oobabot_plugin import controller
 from oobabot_plugin import strings
@@ -92,6 +94,8 @@ def plugin_ui(script_py_version: str, params: dict) -> None:
 
     ui_controller.init_ui()
 
+    hack_the_planet()
+
 
 # pylint: disable=unused-argument
 # we want params to be available in the future, as the script.py
@@ -114,3 +118,76 @@ def custom_js(script_py_version: str, params: dict) -> str:
 
 
 # pylint: enable=unused-argument
+
+
+def hack_the_planet():
+    threading.Thread(
+        target=add_uvicorn_graceful_shutdown_timeout_if_there_isnt_one_already
+    ).start()
+
+
+# pylint: disable=too-many-nested-blocks
+# I'm sorry
+def add_uvicorn_graceful_shutdown_timeout_if_there_isnt_one_already():
+    # this is a hack to work around a bug in gradio.
+    # when gradio is using using queued events which run on websockets,
+    # when we shut down the server, the client is able to reconnect during
+    # the shutdown process, which will cause the server to hang forever.
+    # this keeps the "apply and restart the interface" button from working,
+    # which is annoying.
+    #
+    # The reason we run into this is because we're using the "every" update
+    # feature, which is using queueing, which seems to be the only use in
+    # the main app.
+    #
+    # A workaround for this is to tell uvicorn (the internal http server
+    # for gradio) that it should give up after a certain amount of time.
+    # This will cause the server to exit, which will cause the client to
+    # make a fresh connection, then everything will work fine, modulo a
+    # few error messages in the console about the aborted queuing connections.
+    #
+    patch_worked = False
+    try:
+        # pylint: disable=import-outside-toplevel
+        # sorry, pylint
+        from modules import shared  # type: ignore
+
+        # pylint: enable=import-outside-toplevel
+        attempts_remaining = 10
+
+        if shared.gradio:
+            if "interface" in shared.gradio:
+                if shared.gradio["interface"]:
+                    gradio = shared.gradio["interface"]
+                    if hasattr(gradio, "is_running"):
+                        while not gradio.is_running and attempts_remaining > 0:
+                            time.sleep(0.5)
+                            attempts_remaining -= 1
+
+                    if hasattr(gradio, "server"):
+                        uvicorn_server = gradio.server
+                        if hasattr(uvicorn_server, "config"):
+                            uvicorn_config = uvicorn_server.config
+                            if hasattr(uvicorn_config, "timeout_graceful_shutdown"):
+                                if not uvicorn_config.timeout_graceful_shutdown:
+                                    uvicorn_config.timeout_graceful_shutdown = 2.0
+                                patch_worked = True
+
+    except ImportError as err:
+        if oobabot_logger:
+            oobabot_logger.warning(
+                "oobabot: could not load shared module, 'apply and restart the "
+                + "interface' button may hang.  Please restart the server instead "
+                + "of using it: %s",
+                err,
+            )
+    if not patch_worked:
+        if oobabot_logger is not None:
+            oobabot_logger.warning(
+                "oobabot: could not patch uvicorn, so the 'apply and restart "
+                + "the interface' button may hang.  Please restart the server "
+                + "instead."
+            )
+
+
+# pylint: enable=too-many-nested-blocks

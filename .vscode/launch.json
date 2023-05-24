@@ -1,0 +1,18 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: textgen",
+            "type": "python",
+            "request": "launch",
+            "program": "./server.py",
+            "args": " --extensions api oobabot --listen-port 7862",
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "cwd": "/home/rude/text-generation-webui"
+        }
+    ]
+}

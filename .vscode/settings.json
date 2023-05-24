@@ -5,6 +5,7 @@
         "Oobabooga",
         "oobabot",
         "pyproject",
+        "uvicorn",
         "Wakewords"
     ],
     "python.analysis.typeCheckingMode": "basic"
