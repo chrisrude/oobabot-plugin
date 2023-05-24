@@ -53,7 +53,9 @@ def do_uninstall(cwd: str) -> None:
         sys.exit(1)
 
     # remove the file we copied out of our package from that directory
-    os.remove(cwd + "/extensions/oobabot/script.py")
+    # if it still exists
+    if os.path.isfile(cwd + "/extensions/oobabot/script.py"):
+        os.remove(cwd + "/extensions/oobabot/script.py")
 
     # check that the file is gone
     if os.path.isfile(cwd + "/extensions/oobabot/script.py"):
@@ -62,6 +64,9 @@ def do_uninstall(cwd: str) -> None:
             file=sys.stderr,
         )
         sys.exit(1)
+
+    if os.path.isdir(cwd + "/extensions/oobabot/__pycache__"):
+        shutil.rmtree(cwd + "/extensions/oobabot/__pycache__")
 
     # remove the extensions/oobabot directory if it exists
     if os.path.isdir(cwd + "/extensions/oobabot"):
