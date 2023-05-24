@@ -170,7 +170,7 @@ def add_uvicorn_graceful_shutdown_timeout_if_there_isnt_one_already():
                             uvicorn_config = uvicorn_server.config
                             if hasattr(uvicorn_config, "timeout_graceful_shutdown"):
                                 if not uvicorn_config.timeout_graceful_shutdown:
-                                    uvicorn_config.timeout_graceful_shutdown = 2.0
+                                    uvicorn_config.timeout_graceful_shutdown = 1.0
                                 patch_worked = True
 
     except ImportError as err:
