@@ -10,6 +10,7 @@ script.py.  Responsibilities include:
 import sys
 import threading
 import time
+import typing
 
 from oobabot_plugin import controller
 from oobabot_plugin import strings
@@ -45,44 +46,50 @@ def log_script_py_version(script_py_version: str):
         )
 
 
-def plugin_ui(script_py_version: str, params: dict) -> None:
+def plugin_ui(
+    script_py_version: str = "",
+    params: typing.Optional[dict] = None,
+) -> None:
     """
     Creates custom gradio elements when the UI is launched.
     """
-    log_script_py_version(script_py_version)
-
-    # use optimistic defaults, in case the probing process
-    # fails for some reason.  If either of these fail, the
-    # worst that will happen is that the user will see an error
-    # message when they start the bot, so they have some
-    # chance of fixing it from there.
-
     streaming_port = DEFAULT_STREAMING_API_PORT
     api_extension_loaded = True
-    try:
-        # pylint: disable=import-outside-toplevel
-        # we need to import this dynamically, because it's
-        # not guaranteed to be installed, and will only
-        # exist when running in the context of the
-        # oobabooga server.
-        from modules import shared  # type: ignore
 
-        # pylint: enable=import-outside-toplevel
+    if script_py_version:
+        log_script_py_version(script_py_version)
 
-        if shared.args:
-            if shared.args.extensions:
-                if "api" not in shared.args.extensions:
-                    api_extension_loaded = False
-            if shared.args.api_streaming_port:
-                streaming_port = shared.args.api_streaming_port
+        # use optimistic defaults, in case the probing process
+        # fails for some reason.  If either of these fail, the
+        # worst that will happen is that the user will see an error
+        # message when they start the bot, so they have some
+        # chance of fixing it from there.
+        try:
+            # pylint: disable=import-outside-toplevel
+            # we need to import this dynamically, because it's
+            # not guaranteed to be installed, and will only
+            # exist when running in the context of the
+            # oobabooga server.
+            from modules import shared  # type: ignore
 
-    except ImportError as err:
-        if oobabot_logger:
-            oobabot_logger.warning(
-                "oobabot: could not load shared module, using defaults: %s", err
-            )
+            # pylint: enable=import-outside-toplevel
 
-    config_file = params.get("config_file", DEFAULT_CONFIG_FILE)
+            if shared.args:
+                if shared.args.extensions:
+                    if "api" not in shared.args.extensions:
+                        api_extension_loaded = False
+                if shared.args.api_streaming_port:
+                    streaming_port = shared.args.api_streaming_port
+
+        except ImportError as err:
+            if oobabot_logger:
+                oobabot_logger.warning(
+                    "oobabot: could not load shared module, using defaults: %s", err
+                )
+
+    config_file = DEFAULT_CONFIG_FILE
+    if params and params.get("config_file"):
+        config_file = params["config_file"]
 
     # create the controller, which will load our config file.
     # we need to do this before the UI is constructed
@@ -94,14 +101,18 @@ def plugin_ui(script_py_version: str, params: dict) -> None:
 
     ui_controller.init_ui()
 
-    hack_the_planet()
+    if script_py_version:
+        hack_the_planet()
 
 
 # pylint: disable=unused-argument
 # we want params to be available in the future, as the script.py
 # calling us may be from an older version of the plugin than
 # this file.  So we'll leave it in the signature, but not use it.
-def custom_css(script_py_version: str, params: dict) -> str:
+def custom_css(
+    script_py_version: str = "",
+    params: typing.Optional[dict] = None,
+) -> str:
     """
     Returns custom CSS to be injected into the UI.
     """
@@ -109,12 +120,15 @@ def custom_css(script_py_version: str, params: dict) -> str:
     return strings.get_css()
 
 
-def custom_js(script_py_version: str, params: dict) -> str:
+def custom_js(
+    script_py_version: str,
+    params: typing.Optional[dict] = None,
+) -> str:
     """
     Returns custom JavaScript to be injected into the UI.
     """
     log_script_py_version(script_py_version)
-    return strings.get_js()
+    return ""
 
 
 # pylint: enable=unused-argument
@@ -170,7 +184,7 @@ def add_uvicorn_graceful_shutdown_timeout_if_there_isnt_one_already():
                             uvicorn_config = uvicorn_server.config
                             if hasattr(uvicorn_config, "timeout_graceful_shutdown"):
                                 if not uvicorn_config.timeout_graceful_shutdown:
-                                    uvicorn_config.timeout_graceful_shutdown = 1.0
+                                    uvicorn_config.timeout_graceful_shutdown = 1
                                 patch_worked = True
 
     except ImportError as err:

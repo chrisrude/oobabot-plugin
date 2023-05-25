@@ -151,6 +151,14 @@ class OobabotController:
             outputs=[*self._get_input_handlers().keys()],
         )
 
+        self.layout.ive_done_all_this_button.click(
+            None,
+            inputs=[],
+            outputs=[],
+            _js="() => document.querySelector("
+            + '"#discord_bot_token_accordion > .open").click()',
+        )
+
         def handle_character_change(
             character: str,
             ai_name: str,
