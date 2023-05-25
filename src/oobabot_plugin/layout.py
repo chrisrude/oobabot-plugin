@@ -28,7 +28,6 @@ class OobabotLayout:
 
     # persona widgets
     character_dropdown: gr.Dropdown
-    reload_character_button: gr.Button
 
     ai_name_textbox: gr.Textbox
     persona_textbox: gr.Textbox
@@ -121,10 +120,6 @@ class OobabotLayout:
             self.character_dropdown = gr.Dropdown(
                 label="Character",
                 info="Used in chat and chat-instruct modes.",
-            )
-            self.reload_character_button = gr.Button(
-                value="↻",
-                elem_id="oobabot-refresh-character-menu",
             )
 
         self.ai_name_textbox = gr.Textbox(

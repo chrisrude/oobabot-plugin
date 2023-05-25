@@ -10,10 +10,7 @@ from oobabot_plugin import layout
 from oobabot_plugin import strings
 from oobabot_plugin import worker
 
-# todo: show that we're actually using the selected character
 # todo: params text box for the stable diffusion settings
-# hanging bug on exit
-# todo:
 
 
 class OobabotController:
@@ -146,19 +143,6 @@ class OobabotController:
                 self.layout.ive_done_all_this_button,
                 self.layout.start_button,
             ],
-        )
-
-        def update_available_characters():
-            choices = strings.get_available_characters()
-            self.layout.character_dropdown.update(
-                choices=choices,
-                interactive=True,
-            )
-
-        self.layout.reload_character_button.click(
-            update_available_characters,
-            inputs=[],
-            outputs=[self.layout.character_dropdown],
         )
 
         self.layout.save_settings_button.click(
