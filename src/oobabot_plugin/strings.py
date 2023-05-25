@@ -86,6 +86,9 @@ def update_discord_invite_link(
     return "A link will appear here once you have set your Discord token."
 
 
+CHARACTER_NONE = "None"
+
+
 def get_available_characters():
     """
     This is a list of all files in the ./characters folder whose
@@ -99,7 +102,7 @@ def get_available_characters():
         for filepath in pathlib.Path("characters").glob(f"*.{extension}"):
             characters.append(filepath.stem)
     characters.sort()
-    characters.insert(0, "None")
+    characters.insert(0, CHARACTER_NONE)
     return characters
 
 

@@ -164,6 +164,66 @@ class OobabotController:
             outputs=[*self._get_input_handlers().keys()],
         )
 
+        def handle_character_change(
+            character: str,
+            ai_name: str,
+            persona: str,
+            wakewords: str,
+        ):
+            no_character = False
+            if character is not None:
+                character = character.strip()
+
+            if not character or character == strings.CHARACTER_NONE:
+                no_character = True
+                # get the previous values out of the settings object
+                ai_name = self._get_input_handlers()[
+                    self.layout.ai_name_textbox
+                ].read_from_settings()
+                persona = self._get_input_handlers()[
+                    self.layout.persona_textbox
+                ].read_from_settings()
+                wakewords = self._get_input_handlers()[
+                    self.layout.wake_words_textbox
+                ].read_from_settings()
+
+            new_ai_name, new_persona, new_wakewords = self.worker.preview_persona(
+                character,
+                ai_name,
+                persona,
+                wakewords,
+            )
+
+            # no matter what, create a Persona object and feed the
+            # settings into it, then display what we get
+            # show the AI name and persona text boxes if a character is selected
+            return (
+                self.layout.ai_name_textbox.update(
+                    value=new_ai_name,
+                    interactive=no_character,
+                ),
+                self.layout.persona_textbox.update(
+                    value=new_persona,
+                    interactive=no_character,
+                ),
+                self.layout.wake_words_textbox.update(value=new_wakewords),
+            )
+
+        self.layout.character_dropdown.change(
+            handle_character_change,
+            inputs=[
+                self.layout.character_dropdown,
+                self.layout.ai_name_textbox,
+                self.layout.persona_textbox,
+                self.layout.wake_words_textbox,
+            ],
+            outputs=[
+                self.layout.ai_name_textbox,
+                self.layout.persona_textbox,
+                self.layout.wake_words_textbox,
+            ],
+        )
+
         def handle_start(*args):
             # things to do!
             # 1. save settings

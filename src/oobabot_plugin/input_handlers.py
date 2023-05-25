@@ -107,18 +107,19 @@ class CharacterComponentToSetting(SimpleComponentToSetting):
         super().__init__(component, settings_group, setting_name)
         self.fn_get_character_list = fn_get_character_list
 
-    def _character_name_to_filepath(self, character: str) -> str:
+    @classmethod
+    def character_name_to_filepath(cls, character: str) -> str:
         # this is how it's done in chat.py... there's no method to
         # call, so just do the same thing here
         filename = ""
         for extension in ["yml", "yaml", "json"]:
-            filepath = pathlib.Path(f"{self.FOLDER}/{character}.{extension}")
+            filepath = pathlib.Path(f"{cls.FOLDER}/{character}.{extension}")
             if filepath.exists():
                 filename = str(filepath.resolve())
         return filename
 
     def write_to_settings(self, new_value: str) -> None:
-        filename = self._character_name_to_filepath(new_value)
+        filename = self.character_name_to_filepath(new_value)
         super().write_to_settings(filename)
 
     def read_from_settings(self) -> str:
@@ -168,14 +169,22 @@ class ListComponentToSetting(SimpleComponentToSetting):
     handles settings that are lists of strings.
     """
 
+    @classmethod
+    def list_to_string(cls, word_list: typing.List[str]) -> str:
+        word_list = [str(word).strip() for word in word_list]
+        return ", ".join(word_list)
+
+    @classmethod
+    def string_to_list(cls, word_string: str) -> typing.List[str]:
+        return [word.strip() for word in word_string.split(",")]
+
     def write_to_settings(self, new_value: str) -> None:
-        words = [word.strip() for word in new_value.split(",")]
+        words = self.string_to_list(new_value)
         self.settings_group.set(self.setting_name, words)
 
     def read_from_settings(self) -> str:
         word_list = self.settings_group.get_list(self.setting_name)
-        word_list = [str(word).strip() for word in word_list]
-        return ", ".join(word_list)
+        return self.list_to_string(word_list)  # type: ignore
 
 
 class ResponseRadioComponentToSetting(ComponentToSetting):

@@ -11,6 +11,10 @@
     min-width: 50px;
 }
 
+textarea:disabled {
+    background-color: var(--button-secondary-border-color)
+}
+
 #oobabot-tab .prose #oobabot-invite-link pre {
     display: inline;
     color: orange;
