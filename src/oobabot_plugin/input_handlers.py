@@ -176,7 +176,8 @@ class ListComponentToSetting(SimpleComponentToSetting):
 
     @classmethod
     def string_to_list(cls, word_string: str) -> typing.List[str]:
-        return [word.strip() for word in word_string.split(",")]
+        word_list = [word.strip() for word in word_string.split(",")]
+        return [word for word in word_list if word]
 
     def write_to_settings(self, new_value: str) -> None:
         words = self.string_to_list(new_value)

@@ -143,8 +143,10 @@ class OobabotLayout:
                 to any messages it sees with a matching word.
                 The bot will always reply to @-mentions and
                 direct messages, even if no wake words are supplied.
+                Separate words with commas.
                 """,
             interactive=True,
+            placeholder="e.g.: oobabot, ooba bot, ooba-bot",
         )
 
     BY_SENTENCE = "by sentence"
