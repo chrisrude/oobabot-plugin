@@ -11,6 +11,10 @@
     min-width: 50px;
 }
 
+#oobabot-tab input:disabled {
+    background-color: var(--button-secondary-border-color)
+}
+
 textarea:disabled {
     background-color: var(--button-secondary-border-color)
 }

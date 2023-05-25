@@ -23,6 +23,8 @@ class OobabotController:
     or state.
     """
 
+    is_using_character: bool
+
     def __init__(
         self,
         port: int,
@@ -32,6 +34,7 @@ class OobabotController:
         self.layout = layout.OobabotLayout()
         self.worker = worker.OobabotWorker(port, config_file, self.layout)
         self.api_extension_loaded = api_extension_loaded
+        self.is_using_character = False
 
     def _init_button_enablers(
         self,
@@ -170,19 +173,45 @@ class OobabotController:
             persona: str,
             wakewords: str,
         ):
-            no_character = False
+            now_using_character = False
             if character is not None:
                 character = character.strip()
+                if character and character != strings.CHARACTER_NONE:
+                    now_using_character = True
 
-            if not character or character == strings.CHARACTER_NONE:
-                no_character = True
-                # get the previous values out of the settings object
-                ai_name = self._get_input_handlers()[
-                    self.layout.ai_name_textbox
-                ].read_from_settings()
-                persona = self._get_input_handlers()[
-                    self.layout.persona_textbox
-                ].read_from_settings()
+            # wakewords are awkward because they're a shared
+            # field between persona and character modes.  So
+            # what we do is:
+            #  - when switching from character to persona, we
+            #    save the wakewords from the character mode
+            #    into the settings...
+            #      - we then empty out the wakewords field,
+            #        and let the persona mode fill it in
+            #        with the character's name
+            #  - when switching from persona to character, we
+            #    reload the wakewords from the settings and
+            #    discard whatever the persona mode had put in,
+            #    even if it had been changed by the user.
+            #    Not the best but might be ok.
+
+            # detect a persona -> character switch
+            if not self.is_using_character and now_using_character:
+                # this what is in the settings.yml, not
+                # the previous selection, but should be ok
+                # save textbox to settings
+                if wakewords is not None:
+                    wakewords = wakewords.strip()
+                if wakewords:
+                    self._get_input_handlers()[
+                        self.layout.wake_words_textbox
+                    ].write_to_settings(wakewords)
+
+            # detect a character -> persona switch
+            if now_using_character:
+                # we still want to clear wakewords
+                wakewords = ""
+            else:
+                # load textbox from settings
                 wakewords = self._get_input_handlers()[
                     self.layout.wake_words_textbox
                 ].read_from_settings()
@@ -193,18 +222,25 @@ class OobabotController:
                 persona,
                 wakewords,
             )
+            self.is_using_character = now_using_character
 
             # no matter what, create a Persona object and feed the
             # settings into it, then display what we get
             # show the AI name and persona text boxes if a character is selected
             return (
                 self.layout.ai_name_textbox.update(
-                    value=new_ai_name,
-                    interactive=no_character,
+                    visible=not now_using_character,
+                ),
+                self.layout.ai_name_textbox_character.update(
+                    value=new_ai_name if now_using_character else "",
+                    visible=now_using_character,
                 ),
                 self.layout.persona_textbox.update(
-                    value=new_persona,
-                    interactive=no_character,
+                    visible=not now_using_character,
+                ),
+                self.layout.persona_textbox_character.update(
+                    value=new_persona if now_using_character else "",
+                    visible=now_using_character,
                 ),
                 self.layout.wake_words_textbox.update(value=new_wakewords),
             )
@@ -219,7 +255,9 @@ class OobabotController:
             ],
             outputs=[
                 self.layout.ai_name_textbox,
+                self.layout.ai_name_textbox_character,
                 self.layout.persona_textbox,
+                self.layout.persona_textbox_character,
                 self.layout.wake_words_textbox,
             ],
         )
@@ -306,11 +344,16 @@ class OobabotController:
         )
         stable_diffusion_keywords = [str(x) for x in image_words]
 
+        self.is_using_character = self.worker.is_using_character(
+            strings.get_available_characters,
+        )
+
         self.layout.layout_ui(
             get_logs=self.worker.get_logs,
             has_plausible_token=plausible_token,
             stable_diffusion_keywords=stable_diffusion_keywords,
             api_extension_loaded=self.api_extension_loaded,
+            is_using_character=self.is_using_character,
         )
 
         # create our own handlers for every input event which will map

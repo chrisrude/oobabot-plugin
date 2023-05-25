@@ -89,7 +89,7 @@ def update_discord_invite_link(
 CHARACTER_NONE = "None"
 
 
-def get_available_characters():
+def get_available_characters() -> typing.List[str]:
     """
     This is a list of all files in the ./characters folder whose
     extension is .json, .yaml, or .yml

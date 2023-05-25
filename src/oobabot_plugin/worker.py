@@ -226,3 +226,21 @@ class OobabotWorker:
             persona_handler.persona,
             new_wakewords,
         )
+
+    def is_using_character(
+        self,
+        fn_get_character_list: typing.Callable[[], typing.List[str]],
+    ) -> bool:
+        # get the filename out of the settings.  If it is
+        # not empty, make sure it's one of the options in the
+        # dropdown.
+        persona_file = self.bot.settings.persona_settings.get_str("persona_file")
+        if not persona_file:
+            return False
+        character_name = (
+            input_handlers.CharacterComponentToSetting.filename_to_character_name(
+                persona_file,
+                fn_get_character_list,
+            ),
+        )
+        return "" != character_name

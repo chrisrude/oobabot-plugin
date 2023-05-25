@@ -122,6 +122,23 @@ class CharacterComponentToSetting(SimpleComponentToSetting):
         filename = self.character_name_to_filepath(new_value)
         super().write_to_settings(filename)
 
+    @classmethod
+    def filename_to_character_name(
+        cls,
+        filename: str,
+        fn_get_character_list: typing.Callable[[], typing.List[str]],
+    ) -> str:
+        if not filename:
+            return ""
+        path = pathlib.Path(str(filename))
+        if not path.exists():
+            return ""
+        characters = fn_get_character_list()
+        for character in characters:
+            if character.lower() == path.stem.lower():
+                return character
+        return ""
+
     def read_from_settings(self) -> str:
         # turning the path back into the character name just means
         # removing the folder and extension... but case may have been
@@ -130,16 +147,10 @@ class CharacterComponentToSetting(SimpleComponentToSetting):
         # also, the file may no longer exist, in that case we'll just
         # return the empty string
         filename = super().read_from_settings()
-        if not filename:
-            return ""
-        path = pathlib.Path(str(filename))
-        if not path.exists():
-            return ""
-        characters = self.fn_get_character_list()
-        for character in characters:
-            if character.lower() == path.stem.lower():
-                return character
-        return ""
+        return self.filename_to_character_name(
+            str(filename),
+            self.fn_get_character_list,
+        )
 
     def update_component_from_event(self, new_value: str) -> dict:
         self.write_to_settings(new_value)
@@ -151,8 +162,13 @@ class CharacterComponentToSetting(SimpleComponentToSetting):
 
     def init_component_from_setting(self):
         def init_component():
+            # when initializing the component, we need to
+            # return "None" for an empty character name.
+            character_name = self.read_from_settings()
+            if not character_name:
+                character_name = "None"
             return self.component.update(
-                value=self.read_from_settings(),
+                value=character_name,
                 interactive=True,
                 choices=self.fn_get_character_list(),
             )

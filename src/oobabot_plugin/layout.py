@@ -32,6 +32,13 @@ class OobabotLayout:
 
     ai_name_textbox: gr.Textbox
     persona_textbox: gr.Textbox
+
+    # the _character ones are only shown when we are
+    # using a character, when they're shown, the other
+    # ones are hidden.
+    ai_name_textbox_character: gr.Textbox
+    persona_textbox_character: gr.Textbox
+
     wake_words_textbox: gr.Textbox
 
     # discord behavior widgets
@@ -57,6 +64,7 @@ class OobabotLayout:
         has_plausible_token: bool,
         stable_diffusion_keywords: typing.List[str],
         api_extension_loaded: bool,
+        is_using_character: bool,
     ) -> None:
         with gr.Blocks():
             with gr.Row(elem_id="oobabot-tab"):
@@ -70,7 +78,7 @@ class OobabotLayout:
                         self._init_token_widgets()
                     gr.Markdown("### Oobabot Persona")
                     with gr.Column(scale=0):
-                        self._init_persona_widgets()
+                        self._init_persona_widgets(is_using_character)
                     with gr.Row():
                         with gr.Column():
                             gr.Markdown("### Discord Behavior")
@@ -108,7 +116,7 @@ class OobabotLayout:
             elem_id="oobabot_done_all_this",
         )
 
-    def _init_persona_widgets(self) -> None:
+    def _init_persona_widgets(self, is_using_character: bool) -> None:
         with gr.Row():
             self.character_dropdown = gr.Dropdown(
                 label="Character",
@@ -123,6 +131,7 @@ class OobabotLayout:
             label="AI Name",
             info="Name the AI will use to refer to itself",
             interactive=True,
+            visible=not is_using_character,
         )
         self.persona_textbox = gr.Textbox(
             label="Persona",
@@ -133,7 +142,27 @@ class OobabotLayout:
             """,
             interactive=True,
             lines=6,
+            visible=not is_using_character,
         )
+
+        self.ai_name_textbox_character = gr.Textbox(
+            label="AI Name",
+            info="Name the AI will use to refer to itself",
+            interactive=False,
+            visible=is_using_character,
+        )
+        self.persona_textbox_character = gr.Textbox(
+            label="Persona",
+            info="""
+            This prefix will be added in front of every user-supplied
+            request.  This is useful for setting up a 'character' for the
+            bot to play.
+            """,
+            interactive=False,
+            lines=6,
+            visible=is_using_character,
+        )
+
         self.wake_words_textbox = gr.Textbox(
             label="Wake Words",
             info="""
