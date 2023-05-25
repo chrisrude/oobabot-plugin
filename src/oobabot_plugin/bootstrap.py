@@ -82,7 +82,7 @@ def plugin_ui(script_py_version: str, params: dict) -> None:
                 "oobabot: could not load shared module, using defaults: %s", err
             )
 
-    config_file = params["config_file"] or DEFAULT_CONFIG_FILE
+    config_file = params.get("config_file", DEFAULT_CONFIG_FILE)
 
     # create the controller, which will load our config file.
     # we need to do this before the UI is constructed

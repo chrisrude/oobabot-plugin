@@ -12,6 +12,8 @@ import os
 import shutil
 import sys
 
+from oobabot_plugin import server
+
 
 def ensure_in_oobabooga_dir(cwd: str) -> None:
     if os.path.isdir(cwd + "/extensions"):
@@ -91,6 +93,10 @@ def main():
         + "an oobabooga install.",
     )
     subparsers = parser.add_subparsers()
+
+    subparsers.add_parser("server", help="Run our standalone web server.").set_defaults(
+        func=server.web_main
+    )
 
     subparsers.add_parser("install", help="Install the oobabot plugin.").set_defaults(
         func=do_install
