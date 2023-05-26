@@ -10,8 +10,6 @@ from oobabot_plugin import layout
 from oobabot_plugin import strings
 from oobabot_plugin import worker
 
-# todo: params text box for the stable diffusion settings
-
 
 class OobabotController:
     """
@@ -151,12 +149,53 @@ class OobabotController:
             outputs=[*self._get_input_handlers().keys()],
         )
 
+        def handle_advanced_tab(*args):
+            # when the advanced tab is selected, we need save the
+            # settings, then generate the yaml file and display it
+            # in the html box
+            result = handle_save_click(*args)
+            result = list(result)
+
+            yaml = self.worker.get_settings_as_yaml()
+            result.append(
+                self.layout.advanced_settings_html.update(
+                    value=strings.format_yaml_for_html(yaml),
+                )
+            )
+            return tuple(result)
+
+        self.layout.tab_advanced.select(
+            handle_advanced_tab,
+            inputs=[*self._get_input_handlers().keys()],
+            outputs=[
+                *self._get_input_handlers().keys(),
+                self.layout.advanced_settings_html,
+            ],
+            _js="window.ace_oobabot_init",
+        )
+
+        # we also need to clear advanced_settings_html
+        # when we switch away from the advanced tab
+        def handle_advanced_tab_clear():
+            return self.layout.advanced_settings_html.update(value="")
+
+        self.layout.tab_config.select(
+            handle_advanced_tab_clear,
+            inputs=[],
+            outputs=[self.layout.advanced_settings_html],
+        )
+
+        # handle "Save Settings" on the advanced tab
+        def handle_advanced_save():
+            # todo
+            ...
+
         self.layout.ive_done_all_this_button.click(
             None,
             inputs=[],
             outputs=[],
             _js="() => document.querySelector("
-            + '"#discord_bot_token_accordion > .open").click()',
+            + '"#discord_bot_token_accordion > .open")?.click()',
         )
 
         def handle_character_change(

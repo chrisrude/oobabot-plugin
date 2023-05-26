@@ -15,8 +15,11 @@ def web_main(_cwd: str) -> None:
         title="oobabot",
         css=bootstrap.custom_css(),
     )
-    with gradio_server:
+    with gradio_server as gr:
         bootstrap.plugin_ui()
+
+        js = bootstrap.custom_js()
+        gr.load(lambda: None, None, None, _js=f"() => {{{js}}}")
 
     gradio_server.queue()
     gradio_server.launch(

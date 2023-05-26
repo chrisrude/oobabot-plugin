@@ -121,14 +121,14 @@ def custom_css(
 
 
 def custom_js(
-    script_py_version: str,
+    script_py_version: str = "",
     params: typing.Optional[dict] = None,
 ) -> str:
     """
     Returns custom JavaScript to be injected into the UI.
     """
     log_script_py_version(script_py_version)
-    return ""
+    return strings.get_js()
 
 
 # pylint: enable=unused-argument

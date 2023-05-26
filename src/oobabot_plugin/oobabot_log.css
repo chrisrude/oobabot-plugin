@@ -11,7 +11,7 @@
     min-width: 50px;
 }
 
-#oobabot-tab input:disabled {
+#oobabot-tab-config input:disabled {
     background-color: var(--button-secondary-border-color)
 }
 
@@ -19,7 +19,7 @@ textarea:disabled {
     background-color: var(--button-secondary-border-color)
 }
 
-#oobabot-tab .prose #oobabot-invite-link pre {
+#oobabot-tab-config .prose #oobabot-invite-link pre {
     display: inline;
     color: orange;
     text-decoration: underline;
@@ -30,29 +30,29 @@ textarea:disabled {
     min-width: 50px;
 }
 
-#oobabot-tab .prose * {
+#oobabot-tab-config .prose * {
     font-size: 16px;
 }
 
-#oobabot-tab .prose h1 {
+#oobabot-tab-config .prose h1 {
     padding-top: 10px;
     font-size: 24px;
 }
 
-#oobabot-tab .prose h2 {
+#oobabot-tab-config .prose h2 {
     padding-top: 20px;
     font-size: 18px;
 }
 
-#oobabot-tab .oobabot_instructions code {
+#oobabot-tab-config .oobabot_instructions code {
     font-size: 18px;
 }
 
-#oobabot-tab .oobabot_instructions h1 code {
+#oobabot-tab-config .oobabot_instructions h1 code {
     font-size: 24px;
 }
 
-#oobabot-tab .oobabot-output {
+#oobabot-tab-config .oobabot-output {
     background-color: #0C0C0C;
     color: #CCCCCC;
     font-family: Consolas, Lucida Console, monospace;
@@ -62,22 +62,45 @@ textarea:disabled {
     width: 100%;
 }
 
-#oobabot-tab .prose * {
+#oobabot-tab-config .prose * {
     color: unset;
 }
 
-#oobabot-tab .prose * .oobabot-red {
+#oobabot-tab-config .prose * .oobabot-red {
     color: #C50F1F;
 }
 
-#oobabot-tab .prose * .oobabot-yellow {
+#oobabot-tab-config .prose * .oobabot-yellow {
     color: #C19C00;
 }
 
-#oobabot-tab .prose * .oobabot-cyan {
+#oobabot-tab-config .prose * .oobabot-cyan {
     color: #3A96DD;
 }
 
-#oobabot-tab .prose * .oobabot-white {
+#oobabot-tab-config .prose * .oobabot-white {
     color: #CCCCCC;
+}
+
+.ace_editor {
+    margin: auto;
+    width: 100%;
+}
+
+.scrollmargin {
+    height: 80px;
+    text-align: center;
+}
+
+footer {
+    display: none !important;
+}
+
+.ace_cursor {
+    background: aliceblue;
+}
+
+#oobabot-advanced-save-settings {
+    flex: none;
+    margin: auto;
 }

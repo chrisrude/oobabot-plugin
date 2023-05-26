@@ -3,6 +3,7 @@
 This manages the oobabot worker thread, as well
 as creating the bot itself.
 """
+import io
 import os
 import threading
 import typing
@@ -244,3 +245,14 @@ class OobabotWorker:
             ),
         )
         return "" != character_name
+
+    def get_settings_as_yaml(self) -> str:
+        """
+        Returns the settings as a yaml string.  The settings
+        are whatever is in the settings object.  If you want
+        to reflect what is in the UI first, you should call
+        save_settings() first.
+        """
+        io_stream = io.StringIO()
+        self.bot.settings.write_to_stream(io_stream)
+        return io_stream.getvalue()

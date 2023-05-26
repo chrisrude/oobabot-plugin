@@ -43,11 +43,21 @@ def get_css() -> str:
 
 
 def get_js() -> str:
-    return resource("oobabot_log.js")
+    js = resource("ace.js")
+    js += resource("ace_theme_twilight.js")
+    js += resource("ace_mode_yaml.js")
+    js += resource("ace_oobabot.js")
+    return js
 
 
 def token_is_plausible(token: str) -> bool:
     return len(token.strip()) >= TOKEN_LEN_CHARS
+
+
+def format_yaml_for_html(yaml: str) -> str:
+    template = resource("editor.html")
+    # replace {{OOBABOT-CONFIG-YML}} with yaml
+    return template.replace("{{OOBABOT-CONFIG-YML}}", yaml)
 
 
 def make_link_from_token(
