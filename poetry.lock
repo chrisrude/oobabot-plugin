@@ -1484,13 +1484,13 @@ files = [
 
 [[package]]
 name = "oobabot"
-version = "0.1.8"
+version = "0.1.9"
 description = "A Discord bot which talks to Large Language Model AIs running on oobabooga's text-generation-webui"
 optional = false
 python-versions = ">=3.8.1,<4.0.0"
 files = [
-    {file = "oobabot-0.1.8-py3-none-any.whl", hash = "sha256:72cbc113c03b18bbbf1c1fa87aa007f0bcb5e73638ee30f71405980058d82d22"},
-    {file = "oobabot-0.1.8.tar.gz", hash = "sha256:3f08f76048c7c4b365457c79b70c54fe83d235f236054c7c3dddec034de851ac"},
+    {file = "oobabot-0.1.9-py3-none-any.whl", hash = "sha256:dbaed8b6c8c455a8653d4f213bdd4cae12f1977cfcbd06699f5635841251f172"},
+    {file = "oobabot-0.1.9.tar.gz", hash = "sha256:ede1315bb3b724f874eba649d9c9d1ff56f4ed6d0fe9a6aabda0805a42c352c6"},
 ]
 
 [package.dependencies]
@@ -2102,13 +2102,13 @@ use-chardet-on-py3 = ["chardet (>=3.0.2,<6)"]
 
 [[package]]
 name = "ruamel-yaml"
-version = "0.17.27"
+version = "0.17.28"
 description = "ruamel.yaml is a YAML parser/emitter that supports roundtrip preservation of comments, seq/map flow style, and map key order"
 optional = false
 python-versions = ">=3"
 files = [
-    {file = "ruamel.yaml-0.17.27-py3-none-any.whl", hash = "sha256:c4ffffc972d35927e715683fe1e2e47fa2aebb26ce67fe75e599fb84f115f20b"},
-    {file = "ruamel.yaml-0.17.27.tar.gz", hash = "sha256:cad7e3917da5c321658479f417320443b073e7b272033c799ba52e441d561ae5"},
+    {file = "ruamel.yaml-0.17.28-py3-none-any.whl", hash = "sha256:823aff68f88260805049d6a4825e36cb7f1e273a7dd8f391e7b35a16a67a30ea"},
+    {file = "ruamel.yaml-0.17.28.tar.gz", hash = "sha256:3bf6df1c481d2463a633be6ee86e8aece941bb3298a9a0cd6d0865f47b1ddce6"},
 ]
 
 [package.dependencies]
@@ -2646,4 +2646,4 @@ testing = ["big-O", "flake8 (<5)", "jaraco.functools", "jaraco.itertools", "more
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8.1"
-content-hash = "f3eba118ec44c84e902b4c5a9a36ab3297761be25ce5eb0b8c62141018edf083"
+content-hash = "a839618e917b84a4f5afd85f1986116f347419eaa22587ae0434eebd34843f2a"
