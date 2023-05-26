@@ -15,7 +15,7 @@
     background-color: var(--button-secondary-border-color)
 }
 
-textarea:disabled {
+#oobabot-tab-config textarea:disabled {
     background-color: var(--button-secondary-border-color)
 }
 
@@ -82,20 +82,20 @@ textarea:disabled {
     color: #CCCCCC;
 }
 
-.ace_editor {
+#oobabot-tab-advanced .ace_editor {
     margin: auto;
     width: 100%;
 }
 
-.ace_editor,
-.ace_editor * {
+#oobabot-tab-advanced .ace_editor,
+#oobabot-tab-advanced .ace_editor * {
     font-family: Consolas, "Lucida Console", monospace !important;
-    font-size: 12px !important;
+    font-size: 16px !important;
     font-weight: 400 !important;
     letter-spacing: 0 !important;
 }
 
-.scrollmargin {
+#oobabot-tab-advanced .scrollmargin {
     height: 80px;
     text-align: center;
 }
