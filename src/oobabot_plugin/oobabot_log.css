@@ -104,3 +104,11 @@ footer {
     flex: none;
     margin: auto;
 }
+
+#oobabot-advanced-save-result {
+    text-align: right;
+    overflow: hidden;
+    display: inline-block;
+    height: 60px;
+    padding: 20px 0;
+}

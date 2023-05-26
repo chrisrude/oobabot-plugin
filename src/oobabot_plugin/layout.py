@@ -66,6 +66,7 @@ class OobabotLayout:
     #############################################
 
     advanced_settings_html: gr.HTML
+    advanced_save_result: gr.Markdown
     advanced_save_settings_button: gr.Button
 
     #############################################
@@ -324,10 +325,13 @@ class OobabotLayout:
                     """
                 )
             )
+            self.advanced_save_result = gr.Markdown(
+                elem_id="oobabot-advanced-save-result",
+            )
             self.advanced_save_settings_button = gr.Button(
                 value="💾 Save Settings",
                 elem_id="oobabot-advanced-save-settings",
-                interactive=False,
+                interactive=True,
             )
         self.advanced_settings_html = gr.HTML(
             value="",

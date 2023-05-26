@@ -162,6 +162,13 @@ class OobabotController:
                     value=strings.format_yaml_for_html(yaml),
                 )
             )
+            # clear any previous save output, either
+            # success or error
+            result.append(
+                self.layout.advanced_save_result.update(
+                    value="",
+                )
+            )
             return tuple(result)
 
         self.layout.tab_advanced.select(
@@ -170,12 +177,17 @@ class OobabotController:
             outputs=[
                 *self._get_input_handlers().keys(),
                 self.layout.advanced_settings_html,
+                self.layout.advanced_save_result,
             ],
             _js="window.ace_oobabot_init",
         )
 
-        # we also need to clear advanced_settings_html
-        # when we switch away from the advanced tab
+        # We also need to clear advanced_settings_html
+        # when we switch away from the advanced tab.
+        # This is because we need the #editor element
+        # to not be present in the DOM when we switch
+        # tabs, otherwise the ace editor will attach
+        # to the old element and not the new one
         def handle_advanced_tab_clear():
             return self.layout.advanced_settings_html.update(value="")
 
@@ -186,9 +198,41 @@ class OobabotController:
         )
 
         # handle "Save Settings" on the advanced tab
-        def handle_advanced_save():
-            # todo
-            ...
+        def handle_advanced_save(yaml):
+            # then, save the yaml to the settings
+
+            save_error = self.worker.set_settings_from_yaml(yaml)
+
+            # finally, update all inputs with the new setting
+            # values.  If they haven't changed, these will
+            # just be the old values
+            results = []
+
+            # iterate over args and input_handlers in parallel
+            for component, handler in self._get_input_handlers().items():
+                update = component.update(value=handler.read_from_settings())
+                results.append(update)
+
+            # finally, write new settings to disk
+            self.worker.save_settings()
+
+            results.append(
+                self.layout.advanced_save_result.update(
+                    value=strings.format_save_result(save_error),
+                )
+            )
+
+            return tuple(results)
+
+        self.layout.advanced_save_settings_button.click(
+            handle_advanced_save,
+            inputs=[self.layout.advanced_settings_html],
+            outputs=[
+                *self._get_input_handlers().keys(),
+                self.layout.advanced_save_result,
+            ],
+            _js="window.ooba_extract",
+        )
 
         self.layout.ive_done_all_this_button.click(
             None,
@@ -299,7 +343,9 @@ class OobabotController:
             # 2. disable all the inputs
             # 3. disable the start button
             # 4. enable the stop button
-            # 5. start the bot
+            # 5. disable the advanced save button
+            # 6. start the bot
+
             results = list(handle_save_click(*args))
             # the previous handler will have updated the input's values, but we also
             # want to disable them.  We can do this by merging the dicts.
@@ -308,9 +354,12 @@ class OobabotController:
             ):
                 update_dict.update(handler.disabled())
 
-            # we also need to disable the start button, and enable the stop button
             results.append(self.layout.start_button.update(interactive=False))
             results.append(self.layout.stop_button.update(interactive=True))
+            # the editor itself will key off whether this button is disabled
+            results.append(
+                self.layout.advanced_save_settings_button.update(interactive=False)
+            )
 
             # now start the bot!
             self.worker.start()
@@ -329,6 +378,7 @@ class OobabotController:
                 *self._get_input_handlers().keys(),
                 self.layout.start_button,
                 self.layout.stop_button,
+                self.layout.advanced_save_settings_button,
             ],
         )
 
@@ -338,6 +388,7 @@ class OobabotController:
             # 2. enable all the inputs
             # 3. enable the start button
             # 4. disable the stop button
+            # 5. enable the advanced save button
             self.worker.reload()
 
             results = []
@@ -346,6 +397,9 @@ class OobabotController:
 
             results.append(self.layout.start_button.update(interactive=True))
             results.append(self.layout.stop_button.update(interactive=False))
+            results.append(
+                self.layout.advanced_save_settings_button.update(interactive=True)
+            )
 
             return tuple(results)
 
@@ -357,6 +411,7 @@ class OobabotController:
                 *self._get_input_handlers().keys(),
                 self.layout.start_button,
                 self.layout.stop_button,
+                self.layout.advanced_save_settings_button,
             ],
         )
 

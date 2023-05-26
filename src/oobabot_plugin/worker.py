@@ -256,3 +256,16 @@ class OobabotWorker:
         io_stream = io.StringIO()
         self.bot.settings.write_to_stream(io_stream)
         return io_stream.getvalue()
+
+    def set_settings_from_yaml(self, yaml_str: str) -> typing.Optional[str]:
+        """
+        Sets the settings from a yaml string.  This will
+        overwrite whatever is in the settings object.
+
+        Returns: None if successful, otherwise an error message
+        """
+
+        if self.is_running():
+            raise RuntimeError("Cannot set settings while running")
+
+        return self.bot.settings.load_from_yaml_stream(io.StringIO(yaml_str))

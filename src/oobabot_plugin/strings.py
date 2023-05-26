@@ -60,6 +60,12 @@ def format_yaml_for_html(yaml: str) -> str:
     return template.replace("{{OOBABOT-CONFIG-YML}}", yaml)
 
 
+def format_save_result(yaml_error: typing.Optional[str]) -> str:
+    if yaml_error:
+        return "❌ **Error**: " + yaml_error
+    return "✔️ **Saved**"
+
+
 def make_link_from_token(
     token: str,
     fn_calc_invite_url: typing.Optional[typing.Callable[[str], str]],

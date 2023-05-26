@@ -25,8 +25,22 @@ function ace_oobabot() {
     editor.session.setTabSize(4);
     editor.session.setUseSoftTabs(true);
 
+    var save_button = document.getElementById('oobabot-advanced-save-settings');
+    if (save_button == undefined || save_button.disabled) {
+        editor.setReadOnly(true);
+    }
+
     editor.session.setMode("ace/mode/yaml");
+    window.ooba_editor = editor;
     document.getElementById('editor').style.display = 'block';
+}
+
+function ooba_extract(x) {
+    // if window.ooba_editor is undefined, then we're not in the right place
+    if (window.ooba_editor == undefined) {
+        return x;
+    }
+    return window.ooba_editor.getValue();
 }
 
 function ace_oobabot_init(...args) {
@@ -35,3 +49,4 @@ function ace_oobabot_init(...args) {
     return args;
 }
 window.ace_oobabot_init = ace_oobabot_init;
+window.ooba_extract = ooba_extract;
