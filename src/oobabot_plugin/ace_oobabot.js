@@ -2,7 +2,6 @@ function onIsThere(fn, element_id) {
     // see if the element is there yet
     var element = document.getElementById(element_id);
     if (element) {
-        console.log("found " + element_id);
         fn();
     } else {
         // if not, wait a bit and try again
@@ -21,7 +20,11 @@ function ace_oobabot() {
         showPrintMargin: false,
         useWorker: false,
     });
-    editor.setTheme("ace/theme/twilight");
+    if (document.body.classList.contains('dark')) {
+        editor.setTheme("ace/theme/github_dark");
+    } else {
+        editor.setTheme("ace/theme/github");
+    }
     editor.session.setTabSize(4);
     editor.session.setUseSoftTabs(true);
 

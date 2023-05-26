@@ -43,11 +43,12 @@ def get_css() -> str:
 
 
 def get_js() -> str:
-    js = resource("ace.js")
-    js += resource("ace_theme_twilight.js")
-    js += resource("ace_mode_yaml.js")
-    js += resource("ace_oobabot.js")
-    return js
+    custom_js = resource("ace.js")
+    custom_js += resource("ace_theme_github.js")
+    custom_js += resource("ace_theme_github_dark.js")
+    custom_js += resource("ace_mode_yaml.js")
+    custom_js += resource("ace_oobabot.js")
+    return custom_js
 
 
 def token_is_plausible(token: str) -> bool:

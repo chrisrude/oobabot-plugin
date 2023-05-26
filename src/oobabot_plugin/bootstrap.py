@@ -12,6 +12,9 @@ import threading
 import time
 import typing
 
+import oobabot
+
+import oobabot_plugin
 from oobabot_plugin import controller
 from oobabot_plugin import strings
 
@@ -41,9 +44,15 @@ def log_script_py_version(script_py_version: str):
     # pylint: enable=global-statement
     if SCRIPT_PY_VERSION is None:
         SCRIPT_PY_VERSION = script_py_version
-        oobabot_logger.debug(
-            "oobabot_plugin: bootstrapping from script.py version %s", SCRIPT_PY_VERSION
-        )
+        if "standalone" in script_py_version:
+            oobabot_logger.debug("oobabot_plugin: running standalone")
+        else:
+            oobabot_logger.debug(
+                "oobabot_plugin: inside Oobabooga, " + "using script.py version: %s",
+                SCRIPT_PY_VERSION,
+            )
+        oobabot_logger.debug("oobabot_plugin version: %s", oobabot_plugin.__version__)
+        oobabot_logger.debug("oobabot version: %s", oobabot.__version__)
 
 
 def plugin_ui(
