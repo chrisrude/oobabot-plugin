@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "oobabot-plugin"
-version = "0.1.9"
+version = "0.1.10"
 description = "A Discord bot plugin to oobabooga's text-generation-webui, based on oobabot."
 authors = ["Christopher Rude <chris@rudesoftware.net>"]
 license = "MIT"
@@ -9,8 +9,8 @@ repository = "https://github.com/chrisrude/oobabot-plugin"
 
 [tool.poetry.dependencies]
 python = "^3.8.1"
-oobabot = "^0.1.9"
-gradio = "^3.31.0"
+oobabot = "^0.1.10"
+gradio = "^3.34.0"
 
 [tool.poetry.scripts]
 oobabot-plugin = 'oobabot_plugin.install:main'
