@@ -43,22 +43,11 @@ def get_css() -> str:
 
 
 def get_js() -> str:
-    custom_js = resource("ace.js")
-    custom_js += resource("ace_theme_github.js")
-    custom_js += resource("ace_theme_github_dark.js")
-    custom_js += resource("ace_mode_yaml.js")
-    custom_js += resource("ace_oobabot.js")
-    return custom_js
+    return ""
 
 
 def token_is_plausible(token: str) -> bool:
     return len(token.strip()) >= TOKEN_LEN_CHARS
-
-
-def format_yaml_for_html(yaml: str) -> str:
-    template = resource("editor.html")
-    # replace {{OOBABOT-CONFIG-YML}} with yaml
-    return template.replace("{{OOBABOT-CONFIG-YML}}", yaml)
 
 
 def format_save_result(yaml_error: typing.Optional[str]) -> str:

@@ -65,9 +65,9 @@ class OobabotLayout:
     # Advanced tab
     #############################################
 
-    advanced_settings_html: gr.HTML
     advanced_save_result: gr.Markdown
     advanced_save_settings_button: gr.Button
+    advanced_yaml_editor: gr.Code
 
     #############################################
     # Runtime section
@@ -333,9 +333,8 @@ class OobabotLayout:
                 elem_id="oobabot-advanced-save-settings",
                 interactive=True,
             )
-        self.advanced_settings_html = gr.HTML(
-            value="",
-            elem_id="oobabot-config-giant-html",
+        self.advanced_yaml_editor = gr.Code(
+            language="yaml",
         )
 
     #############################################

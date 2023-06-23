@@ -158,8 +158,8 @@ class OobabotController:
 
             yaml = self.worker.get_settings_as_yaml()
             result.append(
-                self.layout.advanced_settings_html.update(
-                    value=strings.format_yaml_for_html(yaml),
+                self.layout.advanced_yaml_editor.update(
+                    value=yaml,
                 )
             )
             # clear any previous save output, either
@@ -176,25 +176,9 @@ class OobabotController:
             inputs=[*self._get_input_handlers().keys()],
             outputs=[
                 *self._get_input_handlers().keys(),
-                self.layout.advanced_settings_html,
+                self.layout.advanced_yaml_editor,
                 self.layout.advanced_save_result,
             ],
-            _js="window.ace_oobabot_init",
-        )
-
-        # We also need to clear advanced_settings_html
-        # when we switch away from the advanced tab.
-        # This is because we need the #editor element
-        # to not be present in the DOM when we switch
-        # tabs, otherwise the ace editor will attach
-        # to the old element and not the new one
-        def handle_advanced_tab_clear():
-            return self.layout.advanced_settings_html.update(value="")
-
-        self.layout.tab_config.select(
-            handle_advanced_tab_clear,
-            inputs=[],
-            outputs=[self.layout.advanced_settings_html],
         )
 
         # handle "Save Settings" on the advanced tab
@@ -226,12 +210,11 @@ class OobabotController:
 
         self.layout.advanced_save_settings_button.click(
             handle_advanced_save,
-            inputs=[self.layout.advanced_settings_html],
+            inputs=[self.layout.advanced_yaml_editor],
             outputs=[
                 *self._get_input_handlers().keys(),
                 self.layout.advanced_save_result,
             ],
-            _js="window.ooba_extract",
         )
 
         self.layout.ive_done_all_this_button.click(
