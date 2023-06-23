@@ -339,10 +339,10 @@ class OobabotController:
 
             results.append(self.layout.start_button.update(interactive=False))
             results.append(self.layout.stop_button.update(interactive=True))
-            # the editor itself will key off whether this button is disabled
             results.append(
                 self.layout.advanced_save_settings_button.update(interactive=False)
             )
+            results.append(self.layout.advanced_yaml_editor.update(interactive=False))
 
             # now start the bot!
             self.worker.start()
@@ -362,6 +362,7 @@ class OobabotController:
                 self.layout.start_button,
                 self.layout.stop_button,
                 self.layout.advanced_save_settings_button,
+                self.layout.advanced_yaml_editor,
             ],
         )
 
@@ -383,6 +384,7 @@ class OobabotController:
             results.append(
                 self.layout.advanced_save_settings_button.update(interactive=True)
             )
+            results.append(self.layout.advanced_yaml_editor.update(interactive=True))
 
             return tuple(results)
 
@@ -395,6 +397,7 @@ class OobabotController:
                 self.layout.start_button,
                 self.layout.stop_button,
                 self.layout.advanced_save_settings_button,
+                self.layout.advanced_yaml_editor,
             ],
         )
 
