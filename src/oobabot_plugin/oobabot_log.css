@@ -164,3 +164,97 @@ body.dark #oobabot-tab-advanced .prose pre * {
 :after {
     border-left-width: 3px;
 }
+
+.oobabot_token_text {}
+
+#oobabot-tab-audio .prose .oobabot_confidence_great * {
+    color: white;
+}
+
+#oobabot-tab-audio .prose .oobabot_confidence_good * {
+    color: lightgray;
+}
+
+#oobabot-tab-audio .prose .oobabot_confidence_ok * {
+    color: burlywood;
+}
+
+#oobabot-tab-audio .prose .oobabot_confidence_bad * {
+    color: goldenrod;
+}
+
+#oobabot-tab-audio .prose .oobabot_confidence_terrible * {
+    color: darksalmon;
+}
+
+.oobabot_token {
+    display: flex;
+    white-space: break-spaces;
+}
+
+.oobabot_token:hover {
+    background-color: saddlebrown;
+}
+
+#oobabot-tab-audio .prose .oobabot_author_name {
+    color: coral;
+    font-weight: var(--prose-header-text-weight);
+}
+
+.oobabot_author {
+    flex-grow: 0;
+    align-items: stretch;
+    display: flex;
+    height: 32px;
+}
+
+.oobabot_author_avatar {
+    height: 32px;
+    width: 32px;
+}
+
+.oobabot_author_name {
+    min-width: 100px;
+    margin-left: 10px;
+    line-height: 32px;
+}
+
+.oobabot_user_message {
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: column;
+    align-content: flex-end;
+    background: rgb(75, 70, 166);
+    background: linear-gradient(355deg, rgba(75, 70, 166, 1) 0%, rgba(58, 58, 125, 1) 35%, rgba(30, 84, 115, 1) 64%);
+    padding: 10px;
+    border-radius: 5px 10px/5px 10px;
+    margin: 0;
+    align-self: flex-end;
+    width: 60%;
+    margin-top: 10px;
+}
+
+.bot_message {
+    display: flex;
+    align-self: flex-end;
+}
+
+#oobabot-tab-audio .prose .oobabot_message {
+    display: flex;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    flex-direction: column;
+    margin-bottom: 10px;
+}
+
+.oobabot_segment {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+.oobabot-audio-output {
+    display: flex;
+    align-items: flex-end;
+    flex-direction: column;
+}

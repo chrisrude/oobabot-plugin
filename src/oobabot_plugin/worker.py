@@ -10,6 +10,7 @@ import typing
 
 import gradio as gr
 from oobabot import oobabot
+from oobabot import transcript
 
 import oobabot_plugin
 from oobabot_plugin import input_handlers
@@ -103,13 +104,23 @@ class OobabotWorker:
         )
 
     def save_settings(self):
+        if self.bot is None:
+            return
         self.bot.settings.write_to_file(self.config_file)
 
-    def is_audio_enabled(self) -> bool:
-        return self.bot.is_audio_enabled()
+    def is_voice_enabled(self) -> bool:
+        if self.bot is None:
+            return False
+        return self.bot.is_voice_enabled()
 
-    def current_voice_transcript(self):
-        return self.bot.current_voice_transcript()
+    def get_transcript(self) -> typing.Optional[transcript.Transcript]:
+        """
+        Returns the transcript of the latest voice call from the oobabot,
+        or None if there is no transcript.
+        """
+        if self.bot is None:
+            return None
+        return self.bot.current_voice_transcript
 
     def get_input_handlers(
         self,
@@ -222,7 +233,7 @@ class OobabotWorker:
             if ai_name in wakewords_list:
                 wakewords_list.remove(ai_name)
 
-        persona_handler = oobabot.persona.Persona(
+        persona_handler = oobabot.runtime.persona.Persona(
             {
                 "ai_name": ai_name,
                 "persona": persona,

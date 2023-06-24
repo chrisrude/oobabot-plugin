@@ -8,6 +8,7 @@ from oobabot_plugin import button_enablers
 from oobabot_plugin import button_handlers
 from oobabot_plugin import layout
 from oobabot_plugin import strings
+from oobabot_plugin import transcript_view
 from oobabot_plugin import worker
 
 
@@ -53,6 +54,10 @@ class OobabotController:
             stable_diffusion_keywords=stable_diffusion_keywords,
             api_extension_loaded=self.api_extension_loaded,
             is_using_character=is_using_character,
+            get_transcript_html=lambda: transcript_view.get_transcript_html(
+                self.worker.get_transcript
+            ),
+            is_voice_enabled=self.worker.is_voice_enabled(),
         )
 
         # create our own handlers for every input event which will map

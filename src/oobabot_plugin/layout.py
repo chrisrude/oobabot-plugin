@@ -23,6 +23,7 @@ class OobabotLayout:
     def __init__(self) -> None:
         # outer navigation elements
         self.tab_config: gr.Tab
+        self.tab_audio: typing.Optional[gr.Tab]
         self.tab_advanced: gr.Tab
 
         #############################################
@@ -71,6 +72,12 @@ class OobabotLayout:
         self.advanced_yaml_editor: gr.Code
 
         #############################################
+        # Audio tab
+        #############################################
+
+        self.transcript_html: typing.Optional[gr.HTML]
+
+        #############################################
         # Runtime section
         #############################################
 
@@ -87,8 +94,18 @@ class OobabotLayout:
         stable_diffusion_keywords: typing.List[str],
         api_extension_loaded: bool,
         is_using_character: bool,
+        get_transcript_html: typing.Callable[[], str],
+        is_voice_enabled: bool,
     ) -> None:
         with gr.Blocks():
+            if is_voice_enabled:
+                self.tab_audio = gr.Tab(
+                    label="Audio",
+                    elem_id="oobabot-tab-audio",
+                )
+            else:
+                self.tab_audio = None
+
             self.tab_config = gr.Tab(
                 label="Configuration",
                 elem_id="oobabot-tab-config",
@@ -113,6 +130,18 @@ class OobabotLayout:
 
             with self.tab_advanced:
                 self._init_advanced_ui()
+
+            if self.tab_audio is None:
+                self.transcript_html = None
+            else:
+                with self.tab_audio:
+                    with gr.Row():
+                        self.transcript_html = gr.HTML(
+                            label="Oobabot Transcript",
+                            value=get_transcript_html,
+                            every=0.5,
+                            elem_classes=["oobabot-audio-output"],
+                        )
 
     #############################################
     # Configuration tab
