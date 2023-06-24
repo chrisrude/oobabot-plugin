@@ -20,63 +20,64 @@ class OobabotLayout:
     behaviors or values.
     """
 
-    # outer navigation elements
-    tab_config: gr.Tab
-    tab_advanced: gr.Tab
+    def __init__(self) -> None:
+        # outer navigation elements
+        self.tab_config: gr.Tab
+        self.tab_advanced: gr.Tab
 
-    #############################################
-    # Configuration tab
-    #############################################
+        #############################################
+        # Configuration tab
+        #############################################
 
-    # discord token widgets
-    welcome_accordion: gr.Accordion
-    discord_token_textbox: gr.Textbox
-    discord_token_save_button: gr.Button
-    discord_invite_link_html: gr.HTML
-    ive_done_all_this_button: gr.Button
+        # discord token widgets
+        self.welcome_accordion: gr.Accordion
+        self.discord_token_textbox: gr.Textbox
+        self.discord_token_save_button: gr.Button
+        self.discord_invite_link_html: gr.HTML
+        self.ive_done_all_this_button: gr.Button
 
-    # persona widgets
-    character_dropdown: gr.Dropdown
+        # persona widgets
+        self.character_dropdown: gr.Dropdown
 
-    ai_name_textbox: gr.Textbox
-    persona_textbox: gr.Textbox
+        self.ai_name_textbox: gr.Textbox
+        self.persona_textbox: gr.Textbox
 
-    # the _character ones are only shown when we are
-    # using a character, when they're shown, the other
-    # ones are hidden.
-    ai_name_textbox_character: gr.Textbox
-    persona_textbox_character: gr.Textbox
+        # the _character ones are only shown when we are
+        # using a character, when they're shown, the other
+        # ones are hidden.
+        self.ai_name_textbox_character: gr.Textbox
+        self.persona_textbox_character: gr.Textbox
 
-    wake_words_textbox: gr.Textbox
+        self.wake_words_textbox: gr.Textbox
 
-    # discord behavior widgets
-    split_responses_radio_group: gr.Radio
-    history_lines_slider: gr.Slider
-    discord_behavior_checkbox_group: gr.CheckboxGroup
+        # discord behavior widgets
+        self.split_responses_radio_group: gr.Radio
+        self.history_lines_slider: gr.Slider
+        self.discord_behavior_checkbox_group: gr.CheckboxGroup
 
-    # stable diffusion settings
-    stable_diffusion_url_textbox: gr.Textbox
-    stable_diffusion_prefix: gr.Textbox
-    stable_diffusion_params: gr.Textbox
+        # stable diffusion settings
+        self.stable_diffusion_url_textbox: gr.Textbox
+        self.stable_diffusion_prefix: gr.Textbox
+        self.stable_diffusion_params: gr.Textbox
 
-    save_settings_button: gr.Button
+        self.save_settings_button: gr.Button
 
-    #############################################
-    # Advanced tab
-    #############################################
+        #############################################
+        # Advanced tab
+        #############################################
 
-    advanced_save_result: gr.Markdown
-    advanced_save_settings_button: gr.Button
-    advanced_yaml_editor: gr.Code
+        self.advanced_save_result: gr.Markdown
+        self.advanced_save_settings_button: gr.Button
+        self.advanced_yaml_editor: gr.Code
 
-    #############################################
-    # Runtime section
-    #############################################
+        #############################################
+        # Runtime section
+        #############################################
 
-    # runtime widgets
-    start_button: gr.Button
-    stop_button: gr.Button
-    log_output_html: gr.HTML
+        # runtime widgets
+        self.start_button: gr.Button
+        self.stop_button: gr.Button
+        self.log_output_html: gr.HTML
 
     def layout_ui(
         self,
