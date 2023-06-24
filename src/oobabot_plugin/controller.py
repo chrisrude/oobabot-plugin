@@ -67,6 +67,20 @@ class OobabotController:
             None,
         )
 
+        self.layout.start_button.attach_load_event(
+            lambda: self.layout.start_button.update(
+                interactive=not self.worker.is_running()
+            ),
+            every=1.0,
+        )
+
+        self.layout.stop_button.attach_load_event(
+            lambda: self.layout.stop_button.update(
+                interactive=self.worker.is_running()
+            ),
+            every=1.0,
+        )
+
         # turn on a handler for the token textbox which will enable
         # the save button only when the entered token looks plausible
         self.layout.discord_token_textbox.change(
@@ -322,6 +336,10 @@ class OobabotController:
             """
             Enables or disables all the inputs on the page
             based on whether the bot is running or not.
+
+            Maintenance note: this logic is also shadowed in
+            the _init_input_enablers() method, so if you update
+            this, update that too.
             """
             results = []
             for handler in self._get_input_handlers().values():

@@ -58,8 +58,6 @@ class OobabotWorker:
         args = [
             "--config",
             os.path.abspath(self.config_file),
-            "--base-url",
-            f"ws://localhost:{self.port}/",
         ]
         self.bot = oobabot.Oobabot(args)
         self.handlers = {}
