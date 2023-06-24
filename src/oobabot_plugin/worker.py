@@ -11,6 +11,7 @@ import typing
 import gradio as gr
 from oobabot import oobabot
 
+import oobabot_plugin
 from oobabot_plugin import input_handlers
 from oobabot_plugin import layout
 
@@ -59,6 +60,9 @@ class OobabotWorker:
             "--config",
             os.path.abspath(self.config_file),
         ]
+        if self.port != oobabot_plugin.DEFAULT_STREAMING_API_PORT:
+            args.extend(["--base-url", f"ws://localhost:{str(self.port)}"])
+
         self.bot = oobabot.Oobabot(args)
         self.handlers = {}
 

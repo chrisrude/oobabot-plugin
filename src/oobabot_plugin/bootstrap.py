@@ -18,10 +18,6 @@ import oobabot_plugin
 from oobabot_plugin import controller
 from oobabot_plugin import strings
 
-# we'll try to discover what the user has actually set the
-# port to, but if we fail for some reason, fall back to this
-DEFAULT_STREAMING_API_PORT = 5005
-
 # standard config file name, can be overridden in settings.json
 DEFAULT_CONFIG_FILE = "oobabot-config.yml"
 
@@ -62,7 +58,7 @@ def plugin_ui(
     """
     Creates custom gradio elements when the UI is launched.
     """
-    streaming_port = DEFAULT_STREAMING_API_PORT
+    streaming_port = oobabot_plugin.DEFAULT_STREAMING_API_PORT
     api_extension_loaded = True
 
     if script_py_version:
