@@ -92,22 +92,20 @@ class OobabotController:
             # so pass each in turn to our input handler
 
             results = []
-
             # iterate over args and input_handlers in parallel
             for new_value, handler in zip(args, self._get_input_handlers().values()):
                 update = handler.update_component_from_event(new_value)
                 results.append(update)
 
             self.worker.save_settings()
-
-            return tuple(results)
+            return results
 
         def handle_save_discord_token(*args):
             # we've been passed the value of every input component,
             # so pass each in turn to our input handler
 
             # result is a tuple, convert it to a list so we can modify it
-            results = list(handle_save_click(*args))
+            results = handle_save_click(*args)
 
             # get the token from the settings
             token = self.worker.bot.settings.discord_settings.get_str("discord_token")
@@ -144,7 +142,7 @@ class OobabotController:
         )
 
         self.layout.save_settings_button.click(
-            handle_save_click,
+            lambda *args: tuple(handle_save_click(*args)),
             inputs=[*self._get_input_handlers().keys()],
             outputs=[*self._get_input_handlers().keys()],
         )
@@ -320,6 +318,30 @@ class OobabotController:
             ],
         )
 
+        def enable_disable_inputs(is_running: bool):
+            """
+            Enables or disables all the inputs on the page
+            based on whether the bot is running or not.
+            """
+            results = []
+            for handler in self._get_input_handlers().values():
+                if is_running:
+                    results.append(handler.disabled())
+                else:
+                    results.append(handler.enabled())
+
+            results.append(self.layout.start_button.update(interactive=not is_running))
+            results.append(self.layout.stop_button.update(interactive=is_running))
+            results.append(
+                self.layout.advanced_save_settings_button.update(
+                    interactive=not is_running
+                )
+            )
+            results.append(
+                self.layout.advanced_yaml_editor.update(interactive=not is_running)
+            )
+            return results
+
         def handle_start(*args):
             # things to do!
             # 1. save settings
@@ -329,25 +351,25 @@ class OobabotController:
             # 5. disable the advanced save button
             # 6. start the bot
 
-            results = list(handle_save_click(*args))
-            # the previous handler will have updated the input's values, but we also
-            # want to disable them.  We can do this by merging the dicts.
-            for update_dict, handler in zip(
-                results, self._get_input_handlers().values()
-            ):
-                update_dict.update(handler.disabled())
+            save_results = handle_save_click(*args)
+            enable_results = enable_disable_inputs(True)
 
-            results.append(self.layout.start_button.update(interactive=False))
-            results.append(self.layout.stop_button.update(interactive=True))
-            results.append(
-                self.layout.advanced_save_settings_button.update(interactive=False)
-            )
-            results.append(self.layout.advanced_yaml_editor.update(interactive=False))
+            # the handle_save_click handler will have created updates
+            # for the input's values, but we also want to disable them
+            # using the dicts from enable_on_running_state.  We can do
+            # this by merging the dicts into one.
+            for save_result, enable_result in zip(save_results, enable_results):
+                save_result.update(enable_result)
+
+            # zip only looks at the keys in common, so move over any
+            # keys that are in enable_results but not in save_results
+            for update in enable_results[len(save_results) :]:
+                save_results.append(update)
 
             # now start the bot!
             self.worker.start()
 
-            return list(results)
+            return tuple(save_results)
 
         # start button!!!!
         self.layout.start_button.click(
@@ -375,17 +397,7 @@ class OobabotController:
             # 5. enable the advanced save button
             self.worker.reload()
 
-            results = []
-            for handler in self._get_input_handlers().values():
-                results.append(handler.enabled())
-
-            results.append(self.layout.start_button.update(interactive=True))
-            results.append(self.layout.stop_button.update(interactive=False))
-            results.append(
-                self.layout.advanced_save_settings_button.update(interactive=True)
-            )
-            results.append(self.layout.advanced_yaml_editor.update(interactive=True))
-
+            results = enable_disable_inputs(False)
             return tuple(results)
 
         # stop button!!!!
