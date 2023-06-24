@@ -70,3 +70,7 @@ class OobabotController:
 
         # enables or disables buttons based on the state of other inputs
         button_enablers.init_enablers(self.layout, token, self.worker, plausible_token)
+
+        # start the bot if the setting is enabled
+        if self.worker.bot.settings.oobabooga_settings.get("plugin_auto_start"):
+            self.worker.start()

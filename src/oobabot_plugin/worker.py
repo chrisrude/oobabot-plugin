@@ -105,6 +105,12 @@ class OobabotWorker:
     def save_settings(self):
         self.bot.settings.write_to_file(self.config_file)
 
+    def is_audio_enabled(self) -> bool:
+        return self.bot.is_audio_enabled()
+
+    def current_voice_transcript(self):
+        return self.bot.current_voice_transcript()
+
     def get_input_handlers(
         self,
         fn_get_character_list: typing.Callable[[], typing.List[str]],
@@ -171,6 +177,11 @@ class OobabotWorker:
                 layout.stable_diffusion_prefix,
                 settings.stable_diffusion_settings,
                 "extra_prompt_text",
+            ),
+            input_handlers.SimpleComponentToSetting(
+                layout.plugin_auto_start_checkbox,
+                settings.oobabooga_settings,
+                "plugin_auto_start",
             ),
         ]
 

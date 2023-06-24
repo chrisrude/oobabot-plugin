@@ -76,6 +76,7 @@ class OobabotLayout:
 
         # runtime widgets
         self.start_button: gr.Button
+        self.plugin_auto_start_checkbox: gr.Checkbox
         self.stop_button: gr.Button
         self.log_output_html: gr.HTML
 
@@ -350,6 +351,11 @@ class OobabotLayout:
         with gr.Row():
             self.start_button = gr.Button(
                 value="Start Oobabot",
+                interactive=False,
+            )
+            self.plugin_auto_start_checkbox = gr.Checkbox(
+                label="Start automatically when Oobabooga starts",
+                value=False,
                 interactive=False,
             )
             self.stop_button = gr.Button(
