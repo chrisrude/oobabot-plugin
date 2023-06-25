@@ -27,16 +27,20 @@ def get_transcript_html(
     else:
         lines = transcription.get_lines()
 
+    bot_user_id = -1
     user_id_to_user = {}
     for line in lines:
-        if line.user is not None and line.original_message is not None:
-            user_id_to_user[line.original_message.user_id] = line.user
+        if line.user is not None:
+            user_id_to_user[line.user.id] = line.user
+            if line.is_bot:
+                bot_user_id = line.user.id
 
     user_id_to_header = {}
     for user_id, user in user_id_to_user.items():
-        user_id_to_header[user_id] = format_user_header(user)
-
-    user_id_to_header[-1] = format_bot_header()
+        if user_id == bot_user_id:
+            user_id_to_header[user_id] = format_bot_header(user)
+        else:
+            user_id_to_header[user_id] = format_user_header(user)
 
     # get each original transcription (aka user message) from those lines
     user_messages: typing.Set[discrivener.Transcription] = set(
@@ -57,7 +61,7 @@ def get_transcript_html(
 
     last_uid = -2
     last_timestamp = datetime.datetime.min
-    # todo: get persona for bot
+
     for timestamp, user_id, end_timestamp, message in message_list:
         new_user = False
         time_since_last_message = timestamp - last_timestamp
@@ -114,16 +118,7 @@ def format_token(token: discrivener.TokenWithProbability) -> str:
     return f'<div class="oobabot_token {confidence_class}">{token_text}</div>'
 
 
-def format_bot_header() -> str:
-    author_html = ' <div class="oobabot_author">'
-    author_html += '<div class="oobabot_author_name">'
-    author_html += "Bot"
-    author_html += "</div></div>\n"
-
-    return f'<div class="oobabot_bot_message">{author_html}\n'
-
-
-def format_user_header(user) -> str:
+def format_header(user, header_class) -> str:
     avatar_url = user.display_avatar.url
 
     author_html = ' <div class="oobabot_author">'
@@ -135,7 +130,15 @@ def format_user_header(user) -> str:
         author_html += html.escape(user.display_name)
     author_html += "</div></div>\n"
 
-    return f'<div class="oobabot_user_message">{author_html}\n'
+    return f'<div class="{header_class}">{author_html}\n'
+
+
+def format_bot_header(user) -> str:
+    return format_header(user, "oobabot_bot_message")
+
+
+def format_user_header(user):
+    return format_header(user, "oobabot_user_message")
 
 
 def format_user_footer() -> str:
@@ -163,11 +166,10 @@ def format_message(
 def format_bot_message(
     line: transcript.TranscriptLine,
 ) -> typing.Tuple[datetime.datetime, int, datetime.datetime, str]:
-    # todo: bot stats?
-    # use -1 as the bot's user id
+    user_id = -1 if line.user is None else line.user.id
     return (
         line.timestamp,
-        -1,
+        user_id,
         line.timestamp,
         f'<div="bot_message">{html.escape(line.text)}</div>',
     )

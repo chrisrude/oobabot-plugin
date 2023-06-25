@@ -219,24 +219,29 @@ body.dark #oobabot-tab-advanced .prose pre * {
     line-height: 32px;
 }
 
-.oobabot_user_message {
+.oobabot_user_message,
+.oobabot_bot_message {
     display: flex;
     flex-wrap: wrap;
     flex-direction: column;
-    align-content: flex-end;
-    background: rgb(75, 70, 166);
-    background: linear-gradient(355deg, rgba(75, 70, 166, 1) 0%, rgba(58, 58, 125, 1) 35%, rgba(30, 84, 115, 1) 64%);
     padding: 10px;
     border-radius: 5px 10px/5px 10px;
     margin: 0;
-    align-self: flex-end;
     width: 60%;
     margin-top: 10px;
 }
 
-.bot_message {
-    display: flex;
+.oobabot_bot_message {
+    align-self: flex-start;
+    align-content: flex-start;
+    background: green;
+}
+
+.oobabot_user_message {
     align-self: flex-end;
+    align-content: flex-end;
+    background: rgb(75, 70, 166);
+    background: linear-gradient(355deg, rgba(75, 70, 166, 1) 0%, rgba(58, 58, 125, 1) 35%, rgba(30, 84, 115, 1) 64%);
 }
 
 #oobabot-tab-audio .prose .oobabot_message {
