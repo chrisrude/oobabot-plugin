@@ -10,7 +10,6 @@ import typing
 
 import gradio as gr
 from oobabot import oobabot
-from oobabot import transcript
 
 import oobabot_plugin
 from oobabot_plugin import input_handlers
@@ -113,14 +112,25 @@ class OobabotWorker:
             return False
         return self.bot.is_voice_enabled()
 
-    def get_transcript(self) -> typing.Optional[transcript.Transcript]:
+    def get_transcript(self) -> typing.List["oobabot.types.VoiceMessage"]:
         """
         Returns the transcript of the latest voice call from the oobabot,
         or None if there is no transcript.
         """
         if self.bot is None:
-            return None
+            return []
         return self.bot.current_voice_transcript
+
+    def get_fancy_author(
+        self, user_id: int
+    ) -> typing.Optional["oobabot.types.FancyAuthor"]:
+        """
+        Returns display information about the given user id,
+        or None if the user id could not be found.
+        """
+        if self.bot is None:
+            return None
+        return self.bot.fancy_author_info(user_id)
 
     def get_input_handlers(
         self,

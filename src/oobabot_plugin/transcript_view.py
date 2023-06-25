@@ -7,52 +7,57 @@ import datetime
 import html
 import typing
 
-from oobabot import discrivener
 from oobabot import transcript
+from oobabot import types
 
-SEPARATE_MESSAGE_DELTA = datetime.timedelta(seconds=10)
+SEPARATE_MESSAGE_DELTA = datetime.timedelta(seconds=1)
 
 
 def get_transcript_html(
-    get_transcript: typing.Callable[[], typing.Optional[transcript.Transcript]]
+    get_transcript: typing.Callable[[], typing.List["types.VoiceMessage"]],
+    get_fancy_author: typing.Callable[[int], typing.Optional["types.FancyAuthor"]],
 ) -> str:
     """
     Formats a transcript into a string.
     """
-    transcription = get_transcript()
+    messages = get_transcript()
+    if not transcript:
+        return ""
 
-    lines: list[transcript.TranscriptLine]
-    if transcription is None:
-        lines = []
-    else:
-        lines = transcription.get_lines()
+    user_id_to_header: typing.Dict[int, str] = {}
 
-    bot_user_id = -1
-    user_id_to_user = {}
-    for line in lines:
-        if line.user is not None:
-            user_id_to_user[line.user.id] = line.user
-            if line.is_bot:
-                bot_user_id = line.user.id
-
-    user_id_to_header = {}
-    for user_id, user in user_id_to_user.items():
-        if user_id == bot_user_id:
-            user_id_to_header[user_id] = format_bot_header(user)
-        else:
-            user_id_to_header[user_id] = format_user_header(user)
-
-    # get each original transcription (aka user message) from those lines
-    user_messages: typing.Set[discrivener.Transcription] = set(
-        line.original_message for line in lines if line.original_message
-    )
-
+    # tuple is: (start_time, user_id, end_time, message_html)
     message_list: typing.List[
         typing.Tuple[datetime.datetime, int, datetime.datetime, str]
-    ] = [format_bot_message(line) for line in lines if line.is_bot]
+    ] = []
 
-    for message in user_messages:
-        message_list.append(format_message(message))
+    for message in messages:
+        # create a header for this user if we don't have one
+        if message.user_id not in user_id_to_header:
+            fancy_author = get_fancy_author(message.user_id)
+            if fancy_author is None:
+                user_id_to_header[message.user_id] = format_unknown_user_header(
+                    message.user_id,
+                    message.is_bot,
+                )
+            else:
+                user_id_to_header[message.user_id] = format_header(
+                    fancy_author, message.is_bot
+                )
+        # add the message itself to our list
+        if isinstance(message, types.VoiceMessageWithTokens):
+            formatted_message = format_user_message(message)
+        else:
+            formatted_message = format_bot_message(message)
+
+        message_list.append(
+            (
+                message.start_time,
+                message.user_id,
+                message.start_time + message.duration,
+                formatted_message,
+            )
+        )
 
     # order by timestamp
     message_list.sort(key=lambda x: x[0])
@@ -67,21 +72,19 @@ def get_transcript_html(
         time_since_last_message = timestamp - last_timestamp
         if user_id != last_uid or time_since_last_message > SEPARATE_MESSAGE_DELTA:
             if html != "":
-                html += format_user_footer()
+                html += format_footer()
             new_user = True
 
         if new_user:
             html += user_id_to_header[user_id]
             last_uid = user_id
 
-        html += '<div class="oobabot_message">'
         html += message
-        html += "</div>\n"
 
         last_timestamp = end_timestamp
 
     if len(message_list) > 0:
-        html += format_user_footer()
+        html += format_footer()
 
     return html
 
@@ -105,71 +108,66 @@ def percentage_to_confidence_range(percentage: int) -> str:
     return CONFIDENCE_RANGES[-1][1]
 
 
-def format_token(token: discrivener.TokenWithProbability) -> str:
-    token_text = '<div class="oobabot_token_text">'
-    token_text += html.escape(token.token_text)
-    token_text += "</div>"
-
+def format_token(text: str, p: int) -> str:
     confidence_class = "oobabot_confidence_"
-    confidence_class += percentage_to_confidence_range(token.probability)
+    confidence_class += percentage_to_confidence_range(p)
 
     # important to have no spaces between the divs
     # or they will show up as spaces in between the tokens
-    return f'<div class="oobabot_token {confidence_class}">{token_text}</div>'
+    return f'<div class="oobabot_token {confidence_class}">{html.escape(text)}</div>'
 
 
-def format_header(user, header_class) -> str:
-    avatar_url = user.display_avatar.url
-
-    author_html = ' <div class="oobabot_author">'
-    author_html += f'<img class="oobabot_author_avatar" src="{avatar_url}" />'
-    author_html += '<div class="oobabot_author_name">'
-    if user is None:
-        author_html += "-Unknown-"
+def header_class(is_bot: bool) -> str:
+    if is_bot:
+        return "oobabot_bot_message"
     else:
-        author_html += html.escape(user.display_name)
+        return "oobabot_user_message"
+
+
+def format_header(fancy_author: "types.FancyAuthor", is_bot: bool) -> str:
+    author_html = ' <div class="oobabot_author">'
+    author_html += (
+        f'<img class="oobabot_author_avatar" src="{fancy_author.author_avatar_url}" />'
+    )
+    # todo: does accent color work?
+    author_html += '<div class="oobabot_author_name">'
+    author_html += html.escape(fancy_author.author_name)
     author_html += "</div></div>\n"
 
-    return f'<div class="{header_class}">{author_html}\n'
+    return (
+        f'<div class="{header_class(is_bot)}">{author_html}'
+        + '<div class="oobabot_tokens">\n'
+    )
 
 
-def format_bot_header(user) -> str:
-    return format_header(user, "oobabot_bot_message")
-
-
-def format_user_header(user):
-    return format_header(user, "oobabot_user_message")
-
-
-def format_user_footer() -> str:
-    return "</div>\n"
-
-
-def format_message(
-    message: discrivener.Transcription,
-) -> typing.Tuple[datetime.datetime, int, datetime.datetime, str]:
-    segment_html = ""
-    for segment in message.segments:
-        segment_html += ' <div class="oobabot_segment">\n'
-        for token in segment.tokens_with_probability:
-            segment_html += format_token(token)
-        segment_html += " </div>\n"
+def format_unknown_user_header(user_id: int, is_bot: bool) -> str:
+    author_html = ' <div class="oobabot_author">'
+    author_html += '<div class="oobabot_author_name">'
+    author_html += f"-user {user_id}-"
+    author_html += "</div></div>\n"
 
     return (
-        message.timestamp,
-        message.user_id,
-        message.timestamp + message.audio_duration,
-        segment_html,
+        f'<div class="{header_class(is_bot)}">{author_html}'
+        + '<div class="oobabot_tokens">\n'
     )
+
+
+def format_footer() -> str:
+    return "</div></div>\n"
+
+
+def format_user_message(
+    user_message: "types.VoiceMessageWithTokens",
+) -> str:
+    message_html = ""
+
+    for token_text, p in user_message.tokens_with_confidence:
+        message_html += format_token(token_text, p)
+
+    return message_html
 
 
 def format_bot_message(
-    line: transcript.TranscriptLine,
-) -> typing.Tuple[datetime.datetime, int, datetime.datetime, str]:
-    user_id = -1 if line.user is None else line.user.id
-    return (
-        line.timestamp,
-        user_id,
-        line.timestamp,
-        f'<div="bot_message">{html.escape(line.text)}</div>',
-    )
+    message: "types.VoiceMessage",
+) -> str:
+    return html.escape(message.text)

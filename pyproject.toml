@@ -9,7 +9,7 @@ repository = "https://github.com/chrisrude/oobabot-plugin"
 
 [tool.poetry.dependencies]
 python = "^3.8.1"
-oobabot = "^0.2.0" # { path = "../oobabot" }
+oobabot = { path = "../oobabot" }
 gradio = "^3.34.0"
 
 [tool.poetry.scripts]

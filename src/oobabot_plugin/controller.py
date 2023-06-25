@@ -55,7 +55,8 @@ class OobabotController:
             api_extension_loaded=self.api_extension_loaded,
             is_using_character=is_using_character,
             get_transcript_html=lambda: transcript_view.get_transcript_html(
-                self.worker.get_transcript
+                self.worker.get_transcript,
+                self.worker.get_fancy_author,
             ),
             is_voice_enabled=self.worker.is_voice_enabled(),
         )
