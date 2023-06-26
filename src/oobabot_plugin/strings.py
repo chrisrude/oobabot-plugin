@@ -43,7 +43,7 @@ def get_css() -> str:
 
 
 def get_js() -> str:
-    return ""
+    return resource("oobabot_log.js")
 
 
 def token_is_plausible(token: str) -> bool:

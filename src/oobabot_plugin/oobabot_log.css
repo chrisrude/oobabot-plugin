@@ -165,7 +165,7 @@ body.dark #oobabot-tab-advanced .prose pre * {
     border-left-width: 3px;
 }
 
-.oobabot_token_text {}
+/* .oobabot_token_text {} */
 
 #oobabot-tab-audio .prose .oobabot_confidence_great {
     color: white;
@@ -222,6 +222,7 @@ body.dark #oobabot-tab-advanced .prose pre * {
     align-items: stretch;
     display: flex;
     padding-bottom: 10px;
+    min-width: 300px;
 }
 
 .oobabot_author_avatar {
