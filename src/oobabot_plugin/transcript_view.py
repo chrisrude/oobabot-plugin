@@ -7,23 +7,20 @@ import datetime
 import html
 import typing
 
-from oobabot import transcript
 from oobabot import types
 
 SEPARATE_MESSAGE_DELTA = datetime.timedelta(seconds=1)
 
+DATETIME_NONE = datetime.datetime.min
+
 
 def get_transcript_html(
-    get_transcript: typing.Callable[[], typing.List["types.VoiceMessage"]],
+    messages: typing.List["types.VoiceMessage"],
     get_fancy_author: typing.Callable[[int], typing.Optional["types.FancyAuthor"]],
-) -> str:
+) -> typing.Tuple[str, datetime.datetime]:
     """
     Formats a transcript into a string.
     """
-    messages = get_transcript()
-    if not transcript:
-        return ""
-
     user_id_to_header: typing.Dict[int, str] = {}
 
     # tuple is: (start_time, user_id, end_time, message_html)
@@ -65,7 +62,7 @@ def get_transcript_html(
     html = ""
 
     last_uid = -2
-    last_timestamp = datetime.datetime.min
+    last_timestamp = DATETIME_NONE
 
     for timestamp, user_id, end_timestamp, message in message_list:
         new_user = False
@@ -86,7 +83,7 @@ def get_transcript_html(
     if len(message_list) > 0:
         html += format_footer()
 
-    return html
+    return (html, last_timestamp)
 
 
 CONFIDENCE_RANGES = [
@@ -171,3 +168,28 @@ def format_bot_message(
     message: "types.VoiceMessage",
 ) -> str:
     return html.escape(message.text)
+
+
+class TranscriptView:
+    def __init__(
+        self,
+        get_transcript: typing.Callable[[], typing.List["types.VoiceMessage"]],
+        get_fancy_author: typing.Callable[[int], typing.Optional["types.FancyAuthor"]],
+    ):
+        self.last_transcript_html = ""
+        self.last_timestamp = DATETIME_NONE
+        self.get_transcript = get_transcript
+        self.get_fancy_author = get_fancy_author
+
+    def get_html(self) -> str:
+        messages = self.get_transcript()
+        if not messages:
+            return ""
+
+        latest_end_timestamp = messages[-1].start_time + messages[-1].duration
+        if latest_end_timestamp != self.last_timestamp:
+            self.last_transcript_html, self.last_timestamp = get_transcript_html(
+                messages,
+                self.get_fancy_author,
+            )
+        return self.last_transcript_html

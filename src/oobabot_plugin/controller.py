@@ -48,16 +48,18 @@ class OobabotController:
             strings.get_available_characters,
         )
 
+        t_view = transcript_view.TranscriptView(
+            self.worker.get_transcript,
+            self.worker.get_fancy_author,
+        )
+
         self.layout.layout_ui(
             get_logs=self.worker.get_logs,
             has_plausible_token=plausible_token,
             stable_diffusion_keywords=stable_diffusion_keywords,
             api_extension_loaded=self.api_extension_loaded,
             is_using_character=is_using_character,
-            get_transcript_html=lambda: transcript_view.get_transcript_html(
-                self.worker.get_transcript,
-                self.worker.get_fancy_author,
-            ),
+            get_transcript_html=t_view.get_html,
             is_voice_enabled=self.worker.is_voice_enabled(),
         )
 
