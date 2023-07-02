@@ -98,14 +98,6 @@ class OobabotLayout:
         is_voice_enabled: bool,
     ) -> None:
         with gr.Blocks():
-            if is_voice_enabled:
-                self.tab_audio = gr.Tab(
-                    label="Audio",
-                    elem_id="oobabot-tab-audio",
-                )
-            else:
-                self.tab_audio = None
-
             self.tab_config = gr.Tab(
                 label="Configuration",
                 elem_id="oobabot-tab-config",
@@ -114,6 +106,14 @@ class OobabotLayout:
                 label="Advanced",
                 elem_id="oobabot-tab-advanced",
             )
+            if is_voice_enabled:
+                self.tab_audio = gr.Tab(
+                    label="Audio",
+                    elem_id="oobabot-tab-audio",
+                )
+            else:
+                self.tab_audio = None
+
             with self.tab_config:
                 with gr.Row():
                     with gr.Column(min_width=400):
@@ -263,7 +263,7 @@ class OobabotLayout:
             gr.Markdown("### Discord Behavior")
 
             self.split_responses_radio_group = gr.Radio(
-                [self.BY_SENTENCE, self.SINGLE_MESSAGE],
+                [self.BY_SENTENCE, self.SINGLE_MESSAGE, self.STREAMING],
                 label="Split Responses",
                 info="How should `oobabot` split responses into messages?",
                 value=self.BY_SENTENCE,
