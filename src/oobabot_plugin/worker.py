@@ -215,13 +215,12 @@ class OobabotWorker:
         character: str,
         ai_name: str,
         persona: str,
-        wakewords_str: str,
-    ) -> typing.Tuple[str, str, str]:
+    ) -> typing.Tuple[str, str]:
         """
         Takes the persona settings and returns what the bot will
         end up using, given the settings.
 
-        Returns: (ai_name, persona, wakewords)
+        Returns: (ai_name, persona)
         """
         persona_file = (
             input_handlers.CharacterComponentToSetting.character_name_to_filepath(
@@ -229,37 +228,18 @@ class OobabotWorker:
             )
         )
 
-        # we need to turn wakewords into a list, then back again
-        wakewords_list = input_handlers.ListComponentToSetting.string_to_list(
-            wakewords_str
-        )
-
-        # if we change from a manually entered ai name to one
-        # from the persona file, we probably should remove the old
-        # ai name from the wakewords.
-        # if it turns out this *is* the new persona name, that's ok,
-        # since the persona handler will add it back in.
-        if persona_file:
-            if ai_name in wakewords_list:
-                wakewords_list.remove(ai_name)
-
         persona_handler = oobabot.runtime.persona.Persona(
             {
                 "ai_name": ai_name,
                 "persona": persona,
-                "wakewords": wakewords_list,
+                "wakewords": [],
                 "persona_file": persona_file,
             }
-        )
-
-        new_wakewords = input_handlers.ListComponentToSetting.list_to_string(
-            persona_handler.wakewords
         )
 
         return (
             persona_handler.ai_name,
             persona_handler.persona,
-            new_wakewords,
         )
 
     def is_using_character(

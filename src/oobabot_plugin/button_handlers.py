@@ -77,14 +77,12 @@ class ButtonHandlers:
                 layout.character_dropdown,
                 layout.ai_name_textbox,
                 layout.persona_textbox,
-                layout.wake_words_textbox,
             ],
             outputs=[
                 layout.ai_name_textbox,
                 layout.ai_name_textbox_character,
                 layout.persona_textbox,
                 layout.persona_textbox_character,
-                layout.wake_words_textbox,
             ],
         )
 
@@ -218,7 +216,6 @@ class ButtonHandlers:
         character: str,
         ai_name: str,
         persona: str,
-        wakewords: str,
     ):
         now_using_character = False
         if character is not None:
@@ -226,48 +223,10 @@ class ButtonHandlers:
             if character and character != strings.CHARACTER_NONE:
                 now_using_character = True
 
-        # wakewords are awkward because they're a shared
-        # field between persona and character modes.  So
-        # what we do is:
-        #  - when switching from character to persona, we
-        #    save the wakewords from the character mode
-        #    into the settings...
-        #      - we then empty out the wakewords field,
-        #        and let the persona mode fill it in
-        #        with the character's name
-        #  - when switching from persona to character, we
-        #    reload the wakewords from the settings and
-        #    discard whatever the persona mode had put in,
-        #    even if it had been changed by the user.
-        #    Not the best but might be ok.
-
-        # detect a persona -> character switch
-        if not self.is_using_character and now_using_character:
-            # this what is in the settings.yml, not
-            # the previous selection, but should be ok
-            # save textbox to settings
-            if wakewords is not None:
-                wakewords = wakewords.strip()
-            if wakewords:
-                self._get_input_handlers()[
-                    self.layout.wake_words_textbox
-                ].write_to_settings(wakewords)
-
-        # detect a character -> persona switch
-        if now_using_character:
-            # we still want to clear wakewords
-            wakewords = ""
-        else:
-            # load textbox from settings
-            wakewords = self._get_input_handlers()[
-                self.layout.wake_words_textbox
-            ].read_from_settings()
-
-        new_ai_name, new_persona, new_wakewords = self.worker.preview_persona(
+        new_ai_name, new_persona = self.worker.preview_persona(
             character,
             ai_name,
             persona,
-            wakewords,
         )
         self.is_using_character = now_using_character
 
@@ -289,7 +248,6 @@ class ButtonHandlers:
                 value=new_persona if now_using_character else "",
                 visible=now_using_character,
             ),
-            self.layout.wake_words_textbox.update(value=new_wakewords),
         )
 
     def _enable_disable_inputs(self, is_running: bool):
