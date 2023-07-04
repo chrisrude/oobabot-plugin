@@ -176,6 +176,7 @@ class OobabotLayout:
                         placeholder="Paste your Discord bot token here.",
                         # ugh. this is so gradio fires a change when the value's set
                         value=" ",
+                        elem_id="oobabot-token-textbox",
                     )
                     self.discord_token_save_button = gr.Button(
                         value="💾 Save", elem_id="oobabot-save-token"
@@ -385,7 +386,8 @@ class OobabotLayout:
             self.plugin_auto_start_checkbox = gr.Checkbox(
                 label="Start automatically when Oobabooga starts",
                 value=False,
-                interactive=False,
+                interactive=True,
+                elem_id="oobabot-plugin-auto-start",
             )
             self.stop_button = gr.Button(
                 value="Stop Oobabot",
