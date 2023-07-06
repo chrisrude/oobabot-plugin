@@ -38,6 +38,10 @@ def get_instructions_markdown() -> typing.Tuple[str, str]:
     return tuple(md_text.split("{{TOKEN_INPUT_BOX}}", 1))
 
 
+def get_transcript_markdown() -> str:
+    return resource("transcript.md")
+
+
 def get_css() -> str:
     return resource("oobabot_log.css")
 

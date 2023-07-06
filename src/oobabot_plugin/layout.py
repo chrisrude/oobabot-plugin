@@ -75,6 +75,7 @@ class OobabotLayout:
         # Audio tab
         #############################################
 
+        self.transcript_markdown: typing.Optional[gr.Markdown]
         self.transcript_html: typing.Optional[gr.HTML]
 
         #############################################
@@ -132,10 +133,15 @@ class OobabotLayout:
                 self._init_advanced_ui()
 
             if self.tab_audio is None:
+                self.transcript_markdown = None
                 self.transcript_html = None
             else:
                 with self.tab_audio:
-                    with gr.Row():
+                    with gr.Column():
+                        self.transcript_markdown = gr.Markdown(
+                            strings.get_transcript_markdown(),
+                            elem_classes="oobabot-transcript-markdown",
+                        )
                         self.transcript_html = gr.HTML(
                             label="Oobabot Transcript",
                             value=get_transcript_html,
