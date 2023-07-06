@@ -10,7 +10,18 @@ repository = "https://github.com/chrisrude/oobabot-plugin"
 [tool.poetry.dependencies]
 python = "^3.8.1"
 oobabot = { path = "../oobabot" }
-gradio = "~3.33.1"
+# we can't use the latest version of gradio, since a range of
+# text-generation-webui versions are incompatible with it.  But
+# we don't want to use a version older than 3.34.0, since those
+# have serious security issues.  So this version seems like the
+# only compromise, until at least text-generation-webui supports
+# a newer version of gradio.
+gradio = "~3.34.0"
+# we don't actually use fastapi, but it's a dependency of gradio
+# and if this isn't specified, poetry will install a very old version
+# (0.1.17) instead of the latest (0.99.1).  This older version won't
+# work with gradio.  Remove this when either gradio or poetry fixes
+# this issue.
 fastapi = "^0.99.1"
 
 [tool.poetry.scripts]

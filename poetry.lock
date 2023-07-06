@@ -770,13 +770,13 @@ tqdm = ["tqdm"]
 
 [[package]]
 name = "gradio"
-version = "3.33.1"
+version = "3.34.0"
 description = "Python library for easily interacting with trained machine learning models"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "gradio-3.33.1-py3-none-any.whl", hash = "sha256:6650232c88dad1b78f8df3795cf44c52600b5bb96166f18d233e5454547725ae"},
-    {file = "gradio-3.33.1.tar.gz", hash = "sha256:e79033692606b945dcc2bc8f38a3cd2c3a1acd37087365215c1bb00ad7f76aa3"},
+    {file = "gradio-3.34.0-py3-none-any.whl", hash = "sha256:1cd8b25b598d983561d64f0a039af819382f1376c676aa9f84972c46b6875741"},
+    {file = "gradio-3.34.0.tar.gz", hash = "sha256:fd7fa7257ffc749f9dc7c297eba554eaa1e5acd1a5f9c973250b2080932d6a41"},
 ]
 
 [package.dependencies]
@@ -785,7 +785,7 @@ aiohttp = "*"
 altair = ">=4.2.0"
 fastapi = "*"
 ffmpy = "*"
-gradio-client = ">=0.2.4"
+gradio-client = ">=0.2.6"
 httpx = "*"
 huggingface-hub = ">=0.14.0"
 jinja2 = "*"
@@ -2652,4 +2652,4 @@ testing = ["big-O", "flake8 (<5)", "jaraco.functools", "jaraco.itertools", "more
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8.1"
-content-hash = "cb16afa3301398d79cec0899878c3d7ba4f45c7af193717c9f3ec96fd3c54f78"
+content-hash = "c84e03ad9a409874db6b382ea9b1c0f5431ec22cc91ea22ea3ed0a78a626c0a3"
