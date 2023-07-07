@@ -81,7 +81,7 @@ class ButtonEnablers:
         #   2. the bot stopped on its own, perhaps due to an error
         layout.running_state_textbox.attach_load_event(
             self.running_state_update,
-            every=strings.QUICK_UDPATE_INTERVAL_SECONDS,
+            every=strings.QUICK_UPDATE_INTERVAL_SECONDS,
         )
 
         # enable or disable all other input controls based on the running state

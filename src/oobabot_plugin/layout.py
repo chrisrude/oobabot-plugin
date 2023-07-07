@@ -146,7 +146,7 @@ class OobabotLayout:
                         self.transcript_html = gr.HTML(
                             label="Oobabot Transcript",
                             value=get_transcript_html,
-                            every=strings.QUICK_UDPATE_INTERVAL_SECONDS,
+                            every=strings.QUICK_UPDATE_INTERVAL_SECONDS,
                             elem_classes=["oobabot-audio-output"],
                         )
 
@@ -419,6 +419,6 @@ class OobabotLayout:
             self.log_output_html = gr.HTML(
                 label="Oobabot Log",
                 value=get_logs,
-                every=strings.QUICK_UDPATE_INTERVAL_SECONDS,
+                every=strings.QUICK_UPDATE_INTERVAL_SECONDS,
                 elem_classes=["oobabot-output"],
             )
