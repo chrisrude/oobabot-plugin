@@ -9,7 +9,8 @@ repository = "https://github.com/chrisrude/oobabot-plugin"
 
 [tool.poetry.dependencies]
 python = "^3.8.1"
-oobabot = { path = "../oobabot" }
+oobabot = "^0.2.0"
+# oobabot = { path = "../oobabot" }
 # we can't use the latest version of gradio, since a range of
 # text-generation-webui versions are incompatible with it.  But
 # we don't want to use a version older than 3.34.0, since those

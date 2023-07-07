@@ -105,10 +105,10 @@ def percentage_to_confidence_range(percentage: int) -> str:
     return CONFIDENCE_RANGES[-1][1]
 
 
-def format_token(text: str, confience: int) -> str:
-    # confience is a value from 0 to 100
+def format_token(text: str, confidence: int) -> str:
+    # confidence is a value from 0 to 100
     confidence_class = "oobabot_confidence_"
-    confidence_class += percentage_to_confidence_range(confience)
+    confidence_class += percentage_to_confidence_range(confidence)
 
     # important to have no spaces between the divs
     # or they will show up as spaces in between the tokens
@@ -158,8 +158,8 @@ def format_user_message(
 ) -> str:
     message_html = ""
 
-    for token_text, confience in user_message.tokens_with_confidence:
-        message_html += format_token(token_text, confience)
+    for token_text, confidence in user_message.tokens_with_confidence:
+        message_html += format_token(token_text, confidence)
 
     return message_html
 
