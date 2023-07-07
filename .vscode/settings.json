@@ -1,13 +1,17 @@
 {
     "cSpell.words": [
+        "chrisrude",
         "gradio",
+        "jmoney",
+        "mirostat",
         "ooba",
         "Oobabooga",
         "oobabot",
         "pyproject",
         "textbox",
         "uvicorn",
-        "Wakewords"
+        "Wakewords",
+        "Wrexthor"
     ],
     "python.analysis.typeCheckingMode": "basic"
 }
