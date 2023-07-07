@@ -105,9 +105,10 @@ def percentage_to_confidence_range(percentage: int) -> str:
     return CONFIDENCE_RANGES[-1][1]
 
 
-def format_token(text: str, p: int) -> str:
+def format_token(text: str, confience: int) -> str:
+    # confience is a value from 0 to 100
     confidence_class = "oobabot_confidence_"
-    confidence_class += percentage_to_confidence_range(p)
+    confidence_class += percentage_to_confidence_range(confience)
 
     # important to have no spaces between the divs
     # or they will show up as spaces in between the tokens
@@ -117,8 +118,7 @@ def format_token(text: str, p: int) -> str:
 def header_class(is_bot: bool) -> str:
     if is_bot:
         return "oobabot_bot_message"
-    else:
-        return "oobabot_user_message"
+    return "oobabot_user_message"
 
 
 def format_header(fancy_author: "types.FancyAuthor", is_bot: bool) -> str:
@@ -158,8 +158,8 @@ def format_user_message(
 ) -> str:
     message_html = ""
 
-    for token_text, p in user_message.tokens_with_confidence:
-        message_html += format_token(token_text, p)
+    for token_text, confience in user_message.tokens_with_confidence:
+        message_html += format_token(token_text, confience)
 
     return message_html
 
@@ -171,6 +171,10 @@ def format_bot_message(
 
 
 class TranscriptView:
+    """
+    A rendering of a voice transcript to HTML.
+    """
+
     def __init__(
         self,
         get_transcript: typing.Callable[[], typing.List["types.VoiceMessage"]],
