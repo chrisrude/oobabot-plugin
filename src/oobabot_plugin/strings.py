@@ -21,6 +21,8 @@ import oobabot.fancy_logger
 
 TOKEN_LEN_CHARS = 72
 
+QUICK_UDPATE_INTERVAL_SECONDS: float = 0.5
+
 
 def resource(name: str) -> str:
     # return importlib.resources.read_text("oobabot_plugin", name)

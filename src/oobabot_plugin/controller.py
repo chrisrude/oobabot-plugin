@@ -73,11 +73,15 @@ class OobabotController:
         ).values():
             component_to_setting.init_component_from_setting()
 
-        # sets up what happens when each button is pressed
-        button_handlers.ButtonHandlers(is_using_character, self.layout, self.worker)
-
         # enables or disables buttons based on the state of other inputs
-        button_enablers.init_enablers(self.layout, token, self.worker, plausible_token)
+        enablers = button_enablers.ButtonEnablers(
+            self.layout, token, self.worker, plausible_token
+        )
+
+        # sets up what happens when each button is pressed
+        button_handlers.ButtonHandlers(
+            is_using_character, self.layout, self.worker, enablers
+        )
 
         # start the bot if the setting is enabled
         if self.worker.bot.settings.oobabooga_settings.get("plugin_auto_start"):

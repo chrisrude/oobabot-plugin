@@ -2,6 +2,7 @@
 """
 Sets handlers -- the functions that are called when buttons are pressed
 """
+from oobabot_plugin import button_enablers
 from oobabot_plugin import layout as oobabot_layout
 from oobabot_plugin import strings
 from oobabot_plugin import worker as oobabot_worker
@@ -17,10 +18,12 @@ class ButtonHandlers:
         is_using_character: bool,
         layout: oobabot_layout.OobabotLayout,
         worker: oobabot_worker.OobabotWorker,
+        button_enablers: button_enablers.ButtonEnablers,
     ) -> None:
         # this flag is why we have a class for this
         self.is_using_character = is_using_character
         self.layout = layout
+        self.button_enablers = button_enablers
         self.worker = worker
 
         """
@@ -86,20 +89,23 @@ class ButtonHandlers:
             ],
         )
 
-        # start button!!!!
+        # start button.  This takes as input:
+        #  - all of the input fields, right before start
+        #    we will save settings
+        # and as output:
+        #  - the input fields, to set the values which
+        #    were saved -- these might have been transformed
+        #    by the save process
+        #  - the is_running checkbox.  By updating this
+        #    we will enable/disable the other inputs
         layout.start_button.click(
             self._handle_start,
             inputs=[
                 *self._get_input_handlers().keys(),
-                layout.start_button,
-                layout.stop_button,
             ],
             outputs=[
                 *self._get_input_handlers().keys(),
-                layout.start_button,
-                layout.stop_button,
-                layout.advanced_save_settings_button,
-                layout.advanced_yaml_editor,
+                layout.running_state_textbox,
             ],
         )
 
@@ -108,11 +114,7 @@ class ButtonHandlers:
             self._handle_stop,
             inputs=[],
             outputs=[
-                *self._get_input_handlers().keys(),
-                layout.start_button,
-                layout.stop_button,
-                layout.advanced_save_settings_button,
-                layout.advanced_yaml_editor,
+                layout.running_state_textbox,
             ],
         )
 
@@ -250,55 +252,19 @@ class ButtonHandlers:
             ),
         )
 
-    def _enable_disable_inputs(self, is_running: bool):
-        """
-        Enables or disables all the inputs on the page
-        based on whether the bot is running or not.
-
-        Maintenance note: this logic is also shadowed in
-        the _init_input_enablers() method, so if you update
-        this, update that too.
-        """
-        results = []
-        for handler in self._get_input_handlers().values():
-            if is_running:
-                results.append(handler.disabled())
-            else:
-                results.append(handler.enabled())
-
-        results.append(self.layout.start_button.update(interactive=not is_running))
-        results.append(self.layout.stop_button.update(interactive=is_running))
-        results.append(
-            self.layout.advanced_save_settings_button.update(interactive=not is_running)
-        )
-        results.append(
-            self.layout.advanced_yaml_editor.update(interactive=not is_running)
-        )
-        return results
-
     def _handle_start(self, *args):
         # things to do!
         # 1. save settings
-        # 2. disable all the inputs
-        # 3. disable the start button
-        # 4. enable the stop button
-        # 5. disable the advanced save button
-        # 6. start the bot
+        # 2. update the running state text box
+        #    This will cascade to other inputs being disabled,
+        #    and enable the Stop button
+        # 3. start the bot
 
         save_results = self._handle_save_click(*args)
-        enable_results = self._enable_disable_inputs(True)
-
-        # the handle_save_click handler will have created updates
-        # for the input's values, but we also want to disable them
-        # using the dicts from enable_on_running_state.  We can do
-        # this by merging the dicts into one.
-        for save_result, enable_result in zip(save_results, enable_results):
-            save_result.update(enable_result)
-
-        # zip only looks at the keys in common, so move over any
-        # keys that are in enable_results but not in save_results
-        for update in enable_results[len(save_results) :]:
-            save_results.append(update)
+        # optimistically declare that we're running so that the buttons
+        # are updated immediately.  If this turns out to be wrong, we'll
+        # fix it in the next periodic update.
+        save_results.append(self.button_enablers.running_state_update(is_running=True))
 
         # now start the bot!
         self.worker.start()
@@ -308,11 +274,9 @@ class ButtonHandlers:
     def _handle_stop(self):
         # things to do!
         # 1. stop the bot
-        # 2. enable all the inputs
-        # 3. enable the start button
-        # 4. disable the stop button
-        # 5. enable the advanced save button
+        # 2. update the running state text box
+        #    This will cascade to other inputs being enabled,
+        #    and enable the Start button
         self.worker.reload()
 
-        results = self._enable_disable_inputs(False)
-        return tuple(results)
+        return self.button_enablers.running_state_update(is_running=False)

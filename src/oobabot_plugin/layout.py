@@ -87,6 +87,7 @@ class OobabotLayout:
         self.plugin_auto_start_checkbox: gr.Checkbox
         self.stop_button: gr.Button
         self.log_output_html: gr.HTML
+        self.running_state_textbox: gr.Textbox
 
     def layout_ui(
         self,
@@ -145,7 +146,7 @@ class OobabotLayout:
                         self.transcript_html = gr.HTML(
                             label="Oobabot Transcript",
                             value=get_transcript_html,
-                            every=0.5,
+                            every=strings.QUICK_UDPATE_INTERVAL_SECONDS,
                             elem_classes=["oobabot-audio-output"],
                         )
 
@@ -399,6 +400,14 @@ class OobabotLayout:
                 value="Stop Oobabot",
                 interactive=False,
             )
+            self.running_state_textbox = gr.Textbox(
+                "",
+                interactive=False,
+                visible=False,
+                elem_id="oobabot-is-running",
+            )
+            # visible=False,  TODO: HIDE
+
         gr.Markdown("### Oobabot Status", elem_id="oobabot-status-heading")
         if not api_extension_loaded:
             gr.Markdown(
@@ -410,6 +419,6 @@ class OobabotLayout:
             self.log_output_html = gr.HTML(
                 label="Oobabot Log",
                 value=get_logs,
-                every=0.5,
+                every=strings.QUICK_UDPATE_INTERVAL_SECONDS,
                 elem_classes=["oobabot-output"],
             )
