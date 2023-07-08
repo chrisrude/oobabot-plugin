@@ -55,7 +55,7 @@
 #oobabot-tab-config .oobabot-output {
     background-color: #0C0C0C;
     color: #CCCCCC;
-    font-family: Consolas, Lucida Console, monospace;
+    font-family: Consolas, "Lucida Console", monospace;
     padding: 20px;
     border-radius: var(--block-radius);
     min-height: 1160px;
@@ -99,52 +99,12 @@ footer {
     padding: 20px 0;
 }
 
-
-body.dark #oobabot-tab-advanced .prose pre * {
+#oobabot-tab-advanced .cm-content {
     font-size: 16px;
 }
 
 #oobabot-tab-config .prose * {
     color: unset;
-}
-
-#oobabot-tab-advanced .gradio-container-3-32-0 .prose * {
-    font-size: 16px;
-    color: #CCCCCC;
-}
-
-#oobabot-tab-advanced .prose h1 {
-    padding-top: 10px;
-    font-size: 24px;
-}
-
-#oobabot-tab-advanced .prose h2 {
-    padding-top: 20px;
-    font-size: 18px;
-}
-
-#oobabot-tab-advanced .oobabot_instructions code {
-    font-size: 18px;
-}
-
-#oobabot-tab-advanced .oobabot_instructions h1 code {
-    font-size: 24px;
-}
-
-#oobabot-tab-advanced .oobabot-output {
-    background-color: #0C0C0C;
-    color: #CCCCCC;
-    font-family: Consolas, Lucida Console, monospace;
-    padding: 20px;
-    border-radius: var(--block-radius);
-    min-height: 1160px;
-    width: 100%;
-}
-
-#oobabot-tab-advanced pre .ace_cursor,
-:before,
-:after {
-    border-left-width: 3px;
 }
 
 /* .oobabot_token_text {} */
