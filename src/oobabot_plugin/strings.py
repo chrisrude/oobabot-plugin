@@ -19,7 +19,50 @@ import typing
 
 import oobabot.fancy_logger
 
-TOKEN_LEN_CHARS = 72
+# the discord token has this format:
+# AAAAAAAAAAAAAAAAAAAAAAAAAA.BBBBBB.CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+#
+# where each section, A, B, and C, is independently a base64-encoded string.
+#
+# Section A encodes the Client ID.
+#
+# The client ID is a "snowflake", which is inherently a 64-bit integer value.
+# Before being stored, this value is converted to a decimal string representation,
+# then that string is encoded with base64.
+#
+#   Its structure:
+#
+#  bits            (42)                        (5)   (5)     (12)
+#  ddddddddddddddddddddddddddddddddddddddddd ccccc bbbbb aaaaaaaaaaaaa
+#          100101100100111111100000000100101 00000 00000 000000000000
+# where:
+#   d - number of milliseconds since the Discord epoch (2015-01-01T00:00:00.000Z)
+#   c - client ID
+#   b - process ID
+#   a - incrementing counter (per process)
+#
+# Discord was only created in May 2015, and the lowest known snowflake (belonging
+# to the Discord CTO) is '21154535154122752', it having been generated on Friday
+# February 27, 2015 at 09:13:41.112 UTC.
+#
+# When put into an entire snowflake, this has an encoded length of 24 characters.
+#
+# The very last token ever, generated sometime in the UTC afternoon of May 13, 2154,
+# could have an encoded length of 28 characters.
+#
+# Due to the way that base64 encoding works, the length of the encoded string would
+# normally always be a multiple of 4.  However, after the encoding is done, Discord
+# drops the trailing '=' characters, which means that the length of the encoded
+# string is not always a multiple of 4.
+#
+# So, valid lengths for section A are: 24, 25, 26, 27, and 28.
+#
+# Adding in the other 46 characters (from the two period separators, fixed-length
+# sections B and C of 6 and 38 characters, respectively), we get the valid lengths
+# for the entire token:
+#   70, 71, 72, 73, 74
+#
+TOKEN_LEN_VALID_RANGE = range(70, 74 + 1)
 
 QUICK_UPDATE_INTERVAL_SECONDS: float = 0.5
 
@@ -53,7 +96,7 @@ def get_js() -> str:
 
 
 def token_is_plausible(token: str) -> bool:
-    return len(token.strip()) >= TOKEN_LEN_CHARS
+    return len(token.strip()) in TOKEN_LEN_VALID_RANGE
 
 
 def format_save_result(yaml_error: typing.Optional[str]) -> str:
