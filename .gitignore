@@ -3,9 +3,8 @@ __pycache__/
 *.py[cod]
 *$py.class
 
-oobabot-config.yml
+*.yml
 .envrc
-
 
 # C extensions
 *.so
