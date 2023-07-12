@@ -197,3 +197,20 @@ def repair_logging() -> typing.Optional[logging.Logger]:
 
     logging.StreamHandler.emit = hacked_emit
     return ooba_logger
+
+
+STATUS_PREFIX = "<h3>Oobabot Status</h3>"
+
+
+def status_heading(status: str) -> str:
+    if status == "running":
+        return (
+            STATUS_PREFIX
+            + '<div class="oobabot_status oobabot_status_running">Running</div>'
+        )
+    if status == "stopped":
+        return (
+            STATUS_PREFIX
+            + '<div class="oobabot_status oobabot_status_stopped">Stopped</div>'
+        )
+    return STATUS_PREFIX

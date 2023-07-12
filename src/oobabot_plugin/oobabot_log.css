@@ -5,6 +5,10 @@
 
 #oobabot-status-heading {}
 
+.oobabot_status_running {}
+
+.oobabot_status_stopped {}
+
 #oobabot-save-token {
     flex: none;
     min-width: 50px;

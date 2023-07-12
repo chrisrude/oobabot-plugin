@@ -83,6 +83,7 @@ class OobabotLayout:
         #############################################
 
         # runtime widgets
+        self.status_html: gr.HTML
         self.start_button: gr.Button
         self.plugin_auto_start_checkbox: gr.Checkbox
         self.stop_button: gr.Button
@@ -407,9 +408,11 @@ class OobabotLayout:
                 visible=False,
                 elem_id="oobabot-is-running",
             )
-            # visible=False,  TODO: HIDE
 
-        gr.Markdown("### Oobabot Status", elem_id="oobabot-status-heading")
+        self.status_html = gr.HTML(
+            strings.status_heading(""),
+            elem_id="oobabot-status-heading",
+        )
         if not api_extension_loaded:
             gr.Markdown(
                 "**Warning**: The API extension is not loaded.  "

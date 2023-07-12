@@ -89,6 +89,7 @@ class ButtonEnablers:
             self._handle_running_state_change,
             inputs=[layout.running_state_textbox],
             outputs=[
+                layout.status_html,
                 layout.start_button,
                 layout.stop_button,
                 layout.save_settings_button,
@@ -141,6 +142,7 @@ class ButtonEnablers:
             raise ValueError(f"unknown running state: {running_state}")
 
         # order of outputs:
+        #   layout.status_markdown,
         #   layout.start_button,
         #   layout.stop_button,
         #   layout.save_settings_button,
@@ -149,6 +151,9 @@ class ButtonEnablers:
         #   layout.advanced_yaml_editor,
         #   *self._get_input_handlers().keys(),
         results = [
+            self.layout.status_html.update(
+                value=strings.status_heading(running_state),
+            ),
             self.layout.start_button.update(interactive=enable_inputs_and_start),
             self.layout.stop_button.update(interactive=enable_stop),
             self.layout.save_settings_button.update(
