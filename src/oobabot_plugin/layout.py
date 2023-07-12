@@ -86,12 +86,13 @@ class OobabotLayout:
         self.start_button: gr.Button
         self.plugin_auto_start_checkbox: gr.Checkbox
         self.stop_button: gr.Button
+        self.log_etag_textbox: gr.Textbox
         self.log_output_html: gr.HTML
         self.running_state_textbox: gr.Textbox
 
     def layout_ui(
         self,
-        get_logs: typing.Callable[[], str],
+        get_log_etag: typing.Callable[[], int],
         has_plausible_token: bool,
         stable_diffusion_keywords: typing.List[str],
         api_extension_loaded: bool,
@@ -126,7 +127,7 @@ class OobabotLayout:
                         )
                     with gr.Column(scale=2):
                         self._init_runtime_ui(
-                            get_logs,
+                            get_log_etag,
                             api_extension_loaded,
                         )
 
@@ -382,7 +383,7 @@ class OobabotLayout:
 
     def _init_runtime_ui(
         self,
-        get_logs: typing.Callable[[], str],
+        get_log_etag: typing.Callable[[], int],
         api_extension_loaded: bool,
     ) -> None:
         with gr.Row():
@@ -391,7 +392,7 @@ class OobabotLayout:
                 interactive=False,
             )
             self.plugin_auto_start_checkbox = gr.Checkbox(
-                label="Start automatically when Oobabooga starts",
+                label="Start automatically",
                 value=False,
                 interactive=True,
                 elem_id="oobabot-plugin-auto-start",
@@ -416,9 +417,17 @@ class OobabotLayout:
                 elem_id="oobabot-api-not-loaded",
             )
         with gr.Row():
-            self.log_output_html = gr.HTML(
-                label="Oobabot Log",
-                value=get_logs,
+            # this value changes every time the log is updated
+            # it is used to trigger a full HTML update
+            self.log_etag_textbox = gr.Textbox(
+                value=get_log_etag,
                 every=strings.QUICK_UPDATE_INTERVAL_SECONDS,
+                interactive=False,
+                visible=False,
+                elem_id="oobabot-log-etag",
+            )
+            self.log_output_html = gr.HTML(
+                value="",
+                label="Oobabot Log",
                 elem_classes=["oobabot-output"],
             )

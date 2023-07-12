@@ -54,7 +54,7 @@ class OobabotController:
         )
 
         self.layout.layout_ui(
-            get_logs=self.worker.get_logs,
+            get_log_etag=self.worker.get_log_etag,
             has_plausible_token=plausible_token,
             stable_diffusion_keywords=stable_diffusion_keywords,
             api_extension_loaded=self.api_extension_loaded,
@@ -81,6 +81,15 @@ class OobabotController:
         # sets up what happens when each button is pressed
         button_handlers.ButtonHandlers(
             is_using_character, self.layout, self.worker, enablers
+        )
+
+        # when the log etag changes, update the log html
+        self.layout.log_etag_textbox.change(
+            lambda _etag: self.layout.log_output_html.update(
+                value=self.worker.get_logs(),
+            ),
+            inputs=[self.layout.log_etag_textbox],
+            outputs=[self.layout.log_output_html],
         )
 
         # start the bot if the setting is enabled

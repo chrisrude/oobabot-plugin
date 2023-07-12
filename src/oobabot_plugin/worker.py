@@ -90,6 +90,14 @@ class OobabotWorker:
             return True
         return False
 
+    def get_log_etag(self) -> int:
+        """
+        Returns an etag for the oobabot's log.
+        """
+        if self.bot is None:
+            return -1
+        return self.bot.log_count()
+
     def get_logs(self) -> str:
         """
         Returns the logs from the oobabot.
@@ -97,7 +105,7 @@ class OobabotWorker:
         if self.bot is None:
             return ""
 
-        lines = oobabot.fancy_logger.recent_logs.get_all()
+        lines = self.bot.logs()
         return (
             '<div class="oobabot-log">' + "\n<br>".join(lines) + "</div></body></html>"
         )
