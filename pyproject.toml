@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "oobabot-plugin"
-version = "0.2.0"
+version = "0.2.1"
 description = "A Discord bot plugin to oobabooga's text-generation-webui, based on oobabot."
 authors = ["Christopher Rude <chris@rudesoftware.net>"]
 license = "MIT"
@@ -9,7 +9,7 @@ repository = "https://github.com/chrisrude/oobabot-plugin"
 
 [tool.poetry.dependencies]
 python = "^3.8.1"
-oobabot = "^0.2.0"
+oobabot = "^0.2.1"
 # oobabot = { path = "../oobabot" }
 # we can't use the latest version of gradio, since a range of
 # text-generation-webui versions are incompatible with it.  But
