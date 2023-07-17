@@ -75,4 +75,5 @@ When using streaming responses, the bot would not be able to see its own message
 
 ### Full Changelog
 
-[All changes from 0.2.0 to 0.2.1](https://github.com/chrisrude/oobabot/compare/v0.2.0...v0.2.1)
+[All changes from 0.2.0 to 0.2.1: UI](https://github.com/chrisrude/oobabot-plugin/compare/v0.2.0...v0.2.1)
+[All changes from 0.2.0 to 0.2.1: Backend](https://github.com/chrisrude/oobabot/compare/v0.2.0...v0.2.1)
