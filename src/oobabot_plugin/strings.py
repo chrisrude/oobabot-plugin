@@ -161,6 +161,12 @@ def get_available_characters() -> typing.List[str]:
     return characters
 
 
+OTHER_HACKED_LOGGING_ATTRIBUTES = [
+    "warning_advice",
+    "warning_once",
+]
+
+
 def repair_logging() -> typing.Optional[logging.Logger]:
     ##################################
     # so, logging_colors.py, rather than using the logging module's built-in
@@ -177,6 +183,10 @@ def repair_logging() -> typing.Optional[logging.Logger]:
 
     # save the monkey-patched emit
     hacked_emit = logging.StreamHandler.emit
+    saved_hacked_attributes = {}
+    for attr in OTHER_HACKED_LOGGING_ATTRIBUTES:
+        if hasattr(logging.Logger, attr):
+            saved_hacked_attributes[attr] = getattr(logging.Logger, attr)
 
     # reload the logging module
     try:
@@ -196,6 +206,10 @@ def repair_logging() -> typing.Optional[logging.Logger]:
             handler.emit = types.MethodType(logging.StreamHandler.emit, handler)
 
     logging.StreamHandler.emit = hacked_emit
+    # restore other hacked-on attributes
+    for attr, value in saved_hacked_attributes.items():
+        setattr(logging.Logger, attr, value)
+
     return ooba_logger
 
 
