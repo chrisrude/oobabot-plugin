@@ -794,13 +794,13 @@ websockets = ">=10.0"
 
 [[package]]
 name = "gradio-client"
-version = "0.4.0"
+version = "0.2.5"
 description = "Python library for easily interacting with trained machine learning models"
 optional = false
-python-versions = ">=3.8"
+python-versions = ">=3.7"
 files = [
-    {file = "gradio_client-0.4.0-py3-none-any.whl", hash = "sha256:7dd8e0bd5800445ea985c6bc49e4198197d7367fad30e56ac6deef320b8c51b5"},
-    {file = "gradio_client-0.4.0.tar.gz", hash = "sha256:aed2ddbe7801da2a7020170d60454d01c0816eddccc5586b8794b3cb21df1c0d"},
+    {file = "gradio_client-0.2.5-py3-none-any.whl", hash = "sha256:922a5188c93797adce023b4caa655318b9c09834095d31763443c1e7a707e301"},
+    {file = "gradio_client-0.2.5.tar.gz", hash = "sha256:1a24dd7a09976db70fd32cdb5512b6f7b15c1a084f310b5f6b3021c9794d90a4"},
 ]
 
 [package.dependencies]
@@ -808,9 +808,9 @@ fsspec = "*"
 httpx = "*"
 huggingface-hub = ">=0.13.0"
 packaging = "*"
-requests = ">=2.0,<3.0"
-typing-extensions = ">=4.0,<5.0"
-websockets = ">=10.0,<12.0"
+requests = "*"
+typing-extensions = "*"
+websockets = "*"
 
 [[package]]
 name = "h11"
@@ -2768,4 +2768,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8.1"
-content-hash = "91da4ce8720f7a3feb4c5f090f36d54653f8b933923b484f564952ec3b8e07e0"
+content-hash = "16c4a7c67d49c97de770b7194ee6b0cf7ecd3975f07dfc6218c7c3d0e820b706"
