@@ -80,7 +80,8 @@ def get_instructions_markdown() -> typing.Tuple[str, str]:
     token input box.
     """
     md_text = resource("instructions.md")
-    return tuple(md_text.split("{{TOKEN_INPUT_BOX}}", 1))
+    values: list[str] = md_text.split("{{TOKEN_INPUT_BOX}}", 1)
+    return (values[0], values[1])
 
 
 def get_transcript_markdown() -> str:
